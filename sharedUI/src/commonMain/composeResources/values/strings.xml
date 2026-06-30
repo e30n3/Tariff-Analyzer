@@ -4,4 +4,9 @@
     <string name="run">Run</string>
     <string name="stop">Stop</string>
     <string name="theme">Theme</string>
+    <string name="tariffs_title">Tariffs</string>
+    <string name="retry">Retry</string>
+    <string name="refresh">Refresh</string>
+    <string name="price_per_month">%1$s / month</string>
+    <string name="data_and_minutes">%1$d GB · %2$d min</string>
 </resources>

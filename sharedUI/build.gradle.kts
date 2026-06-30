@@ -27,7 +27,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel.navigation3)
             implementation(libs.compose.nav3)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.koin.core)
+            api(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
