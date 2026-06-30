@@ -1,5 +1,6 @@
 package org.ivanzaytsev.tariffanalyzer.presentation.tariff
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,9 +9,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -26,15 +29,27 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.ivanzaytsev.tariffanalyzer.domain.model.Tariff
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.GetTariffsUseCase
 import org.ivanzaytsev.tariffanalyzer.theme.LocalThemeIsDark
@@ -105,25 +120,97 @@ private fun TariffContent(
             )
         },
     ) { innerPadding ->
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            var pickedFile by remember { mutableStateOf<PickedFile?>(null) }
+            FileDropZone(
+                pickedFile = pickedFile,
+                onFilePicked = { pickedFile = it },
+            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                when {
+                    state.isLoading && state.tariffs.isEmpty() ->
+                        CircularProgressIndicator()
+
+                    state.error != null && state.tariffs.isEmpty() ->
+                        ErrorState(
+                            message = state.error,
+                            onRetry = { onIntent(TariffContract.Intent.Load) },
+                        )
+
+                    else -> TariffList(
+                        tariffs = state.tariffs,
+                        selectedId = state.selectedId,
+                        onSelect = { onIntent(TariffContract.Intent.Select(it)) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FileDropZone(
+    pickedFile: PickedFile?,
+    onFilePicked: (PickedFile) -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val borderColor = MaterialTheme.colorScheme.outline
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
         Box(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                .drawBehind {
+                    drawRoundRect(
+                        color = borderColor,
+                        cornerRadius = CornerRadius(12.dp.toPx()),
+                        style = Stroke(
+                            width = 2.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f)),
+                        ),
+                    )
+                }
+                .fileDropTarget(onFilePicked)
+                .clickable {
+                    scope.launch {
+                        val file = withContext(Dispatchers.IO) { pickAndReadFile() }
+                        if (file != null) onFilePicked(file)
+                    }
+                }
+                .padding(16.dp),
             contentAlignment = Alignment.Center,
         ) {
-            when {
-                state.isLoading && state.tariffs.isEmpty() ->
-                    CircularProgressIndicator()
-
-                state.error != null && state.tariffs.isEmpty() ->
-                    ErrorState(
-                        message = state.error,
-                        onRetry = { onIntent(TariffContract.Intent.Load) },
+            Text(
+                text = "Перетащите файл сюда или нажмите, чтобы выбрать",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+            )
+        }
+        if (pickedFile != null) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = pickedFile.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
                     )
-
-                else -> TariffList(
-                    tariffs = state.tariffs,
-                    selectedId = state.selectedId,
-                    onSelect = { onIntent(TariffContract.Intent.Select(it)) },
-                )
+                    Text(
+                        text = pickedFile.content.take(100).ifBlank { "(файл пуст)" },
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
             }
         }
     }
