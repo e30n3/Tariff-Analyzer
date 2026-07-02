@@ -24,6 +24,9 @@ compose.desktop {
             }
             windows {
                 iconFile.set(project.file("appIcons/WindowsIcon.ico"))
+                // Показывает консоль рядом с окном приложения, чтобы при старте
+                // были видны любые ошибки/трассировки до появления GUI.
+                console = true
             }
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))

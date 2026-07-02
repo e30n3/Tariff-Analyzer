@@ -28,6 +28,13 @@ jobs:
       - name: Build portable distributable
         run: ./gradlew :desktopApp:createDistributable --no-daemon
 
+      - name: Add diagnostics helpers to app folder
+        shell: pwsh
+        run: |
+          $src = "desktopApp/build/compose/binaries/main/app"
+          Copy-Item "desktopApp/packaging/windows/Diagnostics.bat" -Destination $src -Force
+          Copy-Item "desktopApp/packaging/windows/КАК-СОБРАТЬ-ЛОГИ.txt" -Destination $src -Force
+
       - name: Zip portable app
         shell: pwsh
         run: |
