@@ -12,6 +12,7 @@ import java.util.Date
 import kotlin.system.exitProcess
 import org.ivanzaytsev.tariffanalyzer.App
 import org.ivanzaytsev.tariffanalyzer.di.initKoin
+import java.nio.charset.Charset
 
 /** Пишет байты сразу в оба потока — оригинальный (консоль) и файл лога. */
 private class TeeOutputStream(
@@ -68,6 +69,28 @@ private fun setupCrashLogging(): File {
     println("Пользователь: ${System.getProperty("user.name")}")
     println("Рабочая директория: ${System.getProperty("user.dir")}")
     println("Каталог приложения (compose.application.dir): ${System.getProperty("compose.application.dir")}")
+    println("Кодировка путей/аргументов (sun.jnu.encoding): ${System.getProperty("sun.jnu.encoding")}")
+    println("Кодировка файлов (file.encoding): ${Charset.defaultCharset().displayName()}")
+    println("Локаль: ${System.getProperty("user.language")}_${System.getProperty("user.country")}")
+
+    val nonAsciiPathParts = listOfNotNull(
+        System.getProperty("user.dir"),
+        System.getProperty("user.name"),
+        System.getProperty("compose.application.dir"),
+    ).filter { it.any { c -> c.code > 127 } }
+    if (nonAsciiPathParts.isNotEmpty()) {
+        println(
+            "ВНИМАНИЕ: путь/имя пользователя содержит не-ASCII символы (например, кириллицу): " +
+                nonAsciiPathParts.joinToString(", "),
+        )
+        println(
+            "Если приложение не запускается именно на этой машине — попробуйте скопировать " +
+                "папку в путь без кириллицы (например, C:\\Temp\\TariffAnalyzer) и запустить оттуда. " +
+                "Известная проблема: при системной кодовой странице, не поддерживающей кириллицу " +
+                "(Language for non-Unicode programs != Russian), загрузка нативных библиотек Skia/Compose " +
+                "по такому пути может тихо падать.",
+        )
+    }
     println("=======================================================")
 
     return logFile

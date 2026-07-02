@@ -32,13 +32,16 @@ jobs:
         shell: pwsh
         run: |
           $src = "desktopApp/build/compose/binaries/main/app"
-          Copy-Item "desktopApp/packaging/windows/Diagnostics.bat" -Destination $src -Force
-          Copy-Item "desktopApp/packaging/windows/КАК-СОБРАТЬ-ЛОГИ.txt" -Destination $src -Force
+          # Копируем файлы диагностики внутрь папки приложения, чтобы они были рядом с EXE
+          # А также в корень, чтобы пользователю было проще их найти
+          Copy-Item "desktopApp/packaging/windows/Diagnostics.bat" -Destination "$src/Diagnostics.bat" -Force
+          Copy-Item "desktopApp/packaging/windows/КАК-СОБРАТЬ-ЛОГИ.txt" -Destination "$src/КАК-СОБРАТЬ-ЛОГИ.txt" -Force
 
       - name: Zip portable app
         shell: pwsh
         run: |
           $src = "desktopApp/build/compose/binaries/main/app"
+          # Упаковываем содержимое папки app, чтобы в корне архива сразу были нужные файлы
           Compress-Archive -Path "$src/*" -DestinationPath "TariffAnalyzer-Windows-portable.zip" -Force
 
       - name: Upload artifact
