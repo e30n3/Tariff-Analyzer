@@ -1,25 +1,37 @@
 package org.ivanzaytsev.tariffanalyzer
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.WideNavigationRail
+import androidx.compose.material3.WideNavigationRailItem
+import androidx.compose.material3.WideNavigationRailValue
+import androidx.compose.material3.rememberWideNavigationRailState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationRail
-import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.Text
-import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.rounded.Fact_check
-import com.composables.icons.materialsymbols.rounded.Play_arrow
-import com.composables.icons.materialsymbols.rounded.Settings
+import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
+import com.composables.icons.materialsymbols.MaterialSymbols
+import com.composables.icons.materialsymbols.rounded.Fact_check
+import com.composables.icons.materialsymbols.rounded.Menu
+import com.composables.icons.materialsymbols.rounded.Menu_open
+import com.composables.icons.materialsymbols.rounded.Play_arrow
+import com.composables.icons.materialsymbols.rounded.Settings
+import kotlinx.coroutines.launch
 import org.ivanzaytsev.tariffanalyzer.designsystem.theme.TariffAnalyzerTheme
 import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
 import org.ivanzaytsev.tariffanalyzer.domain.repository.SettingsRepository
@@ -80,17 +92,50 @@ fun App(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppNavigationRail(
     selectedRoute: AppRoute,
     onRouteSelected: (AppRoute) -> Unit,
 ) {
-    NavigationRail(
+    val railState = rememberWideNavigationRailState(
+        initialValue = WideNavigationRailValue.Expanded,
+    )
+    val scope = rememberCoroutineScope()
+    val railExpanded = railState.targetValue == WideNavigationRailValue.Expanded
+
+    WideNavigationRail(
+        state = railState,
         header = {
-            Text("Hello")
+            Row(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            if (railExpanded) railState.collapse()
+                            else railState.expand()
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = if (railExpanded) {
+                            MaterialSymbols.Rounded.Menu_open
+                        } else {
+                            MaterialSymbols.Rounded.Menu
+                        },
+                        contentDescription = if (railExpanded) "Свернуть навигацию"
+                        else "Развернуть навигацию",
+                    )
+                }
+                AnimatedVisibility(railExpanded) {
+                    Text("Tariff Analyzer")
+                }
+            }
         },
         content = {
-            NavigationRailItem(
+            WideNavigationRailItem(
                 selected = selectedRoute == AppRoute.Settings,
                 onClick = { onRouteSelected(AppRoute.Settings) },
                 icon = {
@@ -100,8 +145,9 @@ private fun AppNavigationRail(
                     )
                 },
                 label = { Text("Настройки") },
+                railExpanded = railExpanded,
             )
-            NavigationRailItem(
+            WideNavigationRailItem(
                 selected = selectedRoute == AppRoute.Configuration,
                 onClick = { onRouteSelected(AppRoute.Configuration) },
                 icon = {
@@ -111,8 +157,9 @@ private fun AppNavigationRail(
                     )
                 },
                 label = { Text("Конфиг") },
+                railExpanded = railExpanded,
             )
-            NavigationRailItem(
+            WideNavigationRailItem(
                 selected = selectedRoute == AppRoute.MessageAnalysis,
                 onClick = { onRouteSelected(AppRoute.MessageAnalysis) },
                 icon = {
@@ -122,6 +169,7 @@ private fun AppNavigationRail(
                     )
                 },
                 label = { Text("Анализ") },
+                railExpanded = railExpanded,
             )
         }
     )
