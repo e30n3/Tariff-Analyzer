@@ -25,7 +25,6 @@ class SettingsViewModel(
 
     override fun reduce(action: Action) {
         when (action) {
-            Action.BackClick -> sendEffect(Effect.NavigateBack)
             is Action.SelectThemeMode -> settingsRepository.setThemeMode(action.mode)
         }
     }
