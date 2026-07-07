@@ -33,6 +33,7 @@ kotlin {
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.materialKolor)
+            implementation(libs.compose.icons.material.symbols.rounded)
         }
 
         commonTest.dependencies {

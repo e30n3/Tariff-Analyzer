@@ -27,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,13 +45,15 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.composables.icons.materialsymbols.MaterialSymbols
+import com.composables.icons.materialsymbols.rounded.Rotate_right
+import com.composables.icons.materialsymbols.rounded.Settings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
 import org.ivanzaytsev.tariffanalyzer.domain.model.Tariff
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.resources.vectorResource
 import tariff_analyzer.sharedui.generated.resources.Res
 import tariff_analyzer.sharedui.generated.resources.data_and_minutes
 import tariff_analyzer.sharedui.generated.resources.empty_file
@@ -65,7 +66,6 @@ import tariff_analyzer.sharedui.generated.resources.refresh
 import tariff_analyzer.sharedui.generated.resources.retry
 import tariff_analyzer.sharedui.generated.resources.settings_title
 import tariff_analyzer.sharedui.generated.resources.tariffs_title
-import tariff_analyzer.sharedui.generated.resources.ic_rotate_right
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,12 +82,15 @@ fun TariffScreenContent(
                 actions = {
                     IconButton(onClick = { onAction(TariffContract.Action.Refresh) }) {
                         Icon(
-                            vectorResource(Res.drawable.ic_rotate_right),
+                            MaterialSymbols.Rounded.Rotate_right,
                             contentDescription = stringResource(Res.string.refresh),
                         )
                     }
-                    TextButton(onClick = { onAction(TariffContract.Action.OpenSettings) }) {
-                        Text(stringResource(Res.string.settings_title))
+                    IconButton(onClick = { onAction(TariffContract.Action.OpenSettings) }) {
+                        Icon(
+                            MaterialSymbols.Rounded.Settings,
+                            contentDescription = stringResource(Res.string.settings_title),
+                        )
                     }
                 },
             )

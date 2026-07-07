@@ -7,15 +7,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.composables.icons.materialsymbols.MaterialSymbols
+import com.composables.icons.materialsymbols.rounded.Arrow_back
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
 import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
 import org.jetbrains.compose.resources.stringResource
@@ -39,8 +42,11 @@ fun SettingsScreenContent(
             TopAppBar(
                 title = { Text(stringResource(Res.string.settings_title)) },
                 navigationIcon = {
-                    TextButton(onClick = { onAction(SettingsContract.Action.BackClick) }) {
-                        Text(stringResource(Res.string.back))
+                    IconButton(onClick = { onAction(SettingsContract.Action.BackClick) }) {
+                        Icon(
+                            MaterialSymbols.Rounded.Arrow_back,
+                            contentDescription = stringResource(Res.string.back),
+                        )
                     }
                 },
             )

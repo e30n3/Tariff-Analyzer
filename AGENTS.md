@@ -82,6 +82,8 @@ ViewModel экранов наследуются от `BaseViewModel<State, Actio
 ### Design System
 В проекте используется Material 3. Готовые компоненты Material 3 имеют приоритет над кастомными: перед добавлением своего компонента нужно проверить список в [.agents/material3-components.md](.agents/material3-components.md).
 
+Для иконок Material Symbols используется `composablehorizons/compose-icons`; перед добавлением или заменой иконок нужно прочитать [.agents/compose-icons.md](.agents/compose-icons.md) и проверить фактические имена иконок, не угадывая их.
+
 Кастомные переиспользуемые UI-компоненты размещаются в отдельном модуле `:designSystem`. Они не должны содержать бизнес-логику, file picker, навигацию или обращения к data/domain слоям. Screen-specific layout допускается держать рядом с экраном в `sharedUI`.
 
 Реализация темы приложения, цветовые схемы, дизайн-токены и переиспользуемые UI primitives должны находиться в `:designSystem`. Product/domain настройки темы, например выбранный пользователем `ThemeMode`, остаются в `sharedUI` и передаются в дизайн-систему как простые UI-параметры.
@@ -100,7 +102,7 @@ ViewModel экранов наследуются от `BaseViewModel<State, Actio
 - **Strict Typing:** избегай `Any`; используй явные domain model, value object, sealed class и sealed interface для состояний и результатов.
 - **Dependency Injection:** регистрируй новые зависимости в Koin-модулях проекта.
 - **Resources:** для строк, иконок и шрифтов используй Compose Resources, если это соответствует текущей структуре проекта.
-- **Design System:** сначала используй готовые Material 3 компоненты из [.agents/material3-components.md](.agents/material3-components.md); кастомные переиспользуемые компоненты добавляй в `:designSystem`.
+- **Design System:** сначала используй готовые Material 3 компоненты из [.agents/material3-components.md](.agents/material3-components.md); для Material Symbols Icons следуй [.agents/compose-icons.md](.agents/compose-icons.md); кастомные переиспользуемые компоненты добавляй в `:designSystem`.
 - **Desktop Compatibility:** при изменениях в `commonMain` учитывай Desktop-поведение и работу с большими локальными файлами.
 - **Streaming by Default:** для `full_msg.csv` и аналогичных файлов проектируй API так, чтобы обработка могла идти построчно.
 - **Naming:** экраны называй `[Feature]Screen.kt`, content-файлы - `[Feature]ScreenContent.kt`, ViewModel - `[Feature]ViewModel.kt`, MVI-контракты - `[Feature]Contract.kt`.
