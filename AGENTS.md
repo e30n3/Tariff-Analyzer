@@ -77,6 +77,8 @@ Tariff Analyzer находится в активной разработке. Ц�
 - `[Feature]ViewModel.kt` - обработка action, обновление state и отправка effect.
 - `[Feature]Contract.kt` - `State`, `Action`, `Effect`.
 
+Composable-функции должны быть декомпозированы: одна composable - один файл. В `*ScreenContent.kt` оставляй только верхнюю stateless content-функцию экрана, а screen-specific UI-блоки выноси в подпакет `composables` рядом с экраном. Shared composable размещай в `sharedComposables` или `:designSystem` по назначению, также по одному composable на файл.
+
 ViewModel экранов наследуются от `BaseViewModel<State, Action, Effect>`, если нет сильной причины для исключения. `BaseViewModel` отвечает за единый публичный API `state`, `effect`, `onAction(...)` и базовое Kermit-логирование action/state/effect. Навигация и snackbar/dialog события должны идти через `Effect`, а не выполняться напрямую из `ScreenContent`.
 
 ### Design System
@@ -103,6 +105,7 @@ ViewModel экранов наследуются от `BaseViewModel<State, Actio
 - **Dependency Injection:** регистрируй новые зависимости в Koin-модулях проекта.
 - **Resources:** для строк, иконок и шрифтов используй Compose Resources, если это соответствует текущей структуре проекта.
 - **Design System:** сначала используй готовые Material 3 компоненты из [.agents/material3-components.md](.agents/material3-components.md); для Material Symbols Icons следуй [.agents/compose-icons.md](.agents/compose-icons.md); кастомные переиспользуемые компоненты добавляй в `:designSystem`.
+- **Composable Decomposition:** каждая composable должна находиться в отдельном файле; для screen-specific composable используй подпакет `composables` внутри пакета экрана.
 - **Desktop Compatibility:** при изменениях в `commonMain` учитывай Desktop-поведение и работу с большими локальными файлами.
 - **Streaming by Default:** для `full_msg.csv` и аналогичных файлов проектируй API так, чтобы обработка могла идти построчно.
 - **Naming:** экраны называй `[Feature]Screen.kt`, content-файлы - `[Feature]ScreenContent.kt`, ViewModel - `[Feature]ViewModel.kt`, MVI-контракты - `[Feature]Contract.kt`.

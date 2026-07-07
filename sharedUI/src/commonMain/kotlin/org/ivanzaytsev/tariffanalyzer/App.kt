@@ -1,7 +1,14 @@
 package org.ivanzaytsev.tariffanalyzer
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -28,8 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavEntry
+import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.rounded.Fact_check
@@ -79,13 +88,18 @@ fun App(
             NavDisplay(
                 backStack = backStack,
                 modifier = Modifier.weight(1f),
+                transitionSpec = appScreenTransitionSpec(),
+                popTransitionSpec = appScreenTransitionSpec(),
                 onBack = {
                     if (backStack.size > 1) {
                         backStack.removeLast()
                     }
                 },
                 entryProvider = { route ->
-                    NavEntry(route) {
+                    NavEntry(
+                        key = route,
+                        contentKey = route.navigationContentKey,
+                    ) {
                         when (route) {
                             AppRoute.Configuration -> ConfigurationScreen()
                             AppRoute.MessageAnalysis -> MessageAnalysisScreen()
@@ -183,6 +197,54 @@ private fun AppNavigationRail(
         }
     )
 }
+
+private fun appScreenTransitionSpec(): AnimatedContentTransitionScope<Scene<AppRoute>>.() -> ContentTransform =
+    {
+        val initialContentKey = initialState.entries.lastOrNull()?.contentKey as? String
+        val targetContentKey = targetState.entries.lastOrNull()?.contentKey as? String
+        val direction = targetContentKey.navigationOrder.compareTo(initialContentKey.navigationOrder)
+
+        screenVerticalTransition(direction)
+    }
+
+private fun screenVerticalTransition(direction: Int): ContentTransform {
+    val animationSpec = tween<IntOffset>(durationMillis = 320)
+    val fadeSpec = tween<Float>(durationMillis = 220)
+    val enterOffset: (Int) -> Int = { fullHeight -> fullHeight / 2 }
+    val exitOffset: (Int) -> Int = { fullHeight -> fullHeight / 4 }
+
+    return ContentTransform(
+        targetContentEnter = slideInVertically(animationSpec) { fullHeight ->
+            when {
+                direction > 0 -> enterOffset(fullHeight)
+                direction < 0 -> -enterOffset(fullHeight)
+                else -> 0
+            }
+        } + fadeIn(fadeSpec),
+        initialContentExit = slideOutVertically(animationSpec) { fullHeight ->
+            when {
+                direction > 0 -> -exitOffset(fullHeight)
+                direction < 0 -> exitOffset(fullHeight)
+                else -> 0
+            }
+        } + fadeOut(fadeSpec),
+    )
+}
+
+private val AppRoute.navigationContentKey: String
+    get() = when (this) {
+        AppRoute.Settings -> "settings"
+        AppRoute.Configuration -> "configuration"
+        AppRoute.MessageAnalysis -> "message_analysis"
+    }
+
+private val String?.navigationOrder: Int
+    get() = when (this) {
+        AppRoute.Settings.navigationContentKey -> 0
+        AppRoute.Configuration.navigationContentKey -> 1
+        AppRoute.MessageAnalysis.navigationContentKey -> 2
+        else -> 1
+    }
 
 private data class AppNavigationRailItem(
     val route: AppRoute,
