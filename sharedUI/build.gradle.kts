@@ -30,6 +30,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             api(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
             implementation(libs.multiplatformSettings)
             implementation(libs.kotlinx.datetime)
             implementation(libs.materialKolor)

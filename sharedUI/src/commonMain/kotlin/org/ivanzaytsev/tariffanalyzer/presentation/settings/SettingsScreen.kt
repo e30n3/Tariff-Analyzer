@@ -4,19 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.collectLatest
-import org.ivanzaytsev.tariffanalyzer.domain.repository.SettingsRepository
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
 ) {
-    val settingsRepository = koinInject<SettingsRepository>()
-    val viewModel: SettingsViewModel = viewModel {
-        SettingsViewModel(settingsRepository)
-    }
+    val viewModel = koinViewModel<SettingsViewModel>()
 
     val state by viewModel.state.collectAsStateWithLifecycle()
 

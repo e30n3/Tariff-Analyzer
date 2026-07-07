@@ -12,9 +12,9 @@ import androidx.navigation3.ui.NavDisplay
 import org.ivanzaytsev.tariffanalyzer.designsystem.theme.TariffAnalyzerTheme
 import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
 import org.ivanzaytsev.tariffanalyzer.domain.repository.SettingsRepository
+import org.ivanzaytsev.tariffanalyzer.presentation.analyzer.AnalyzerScreen
 import org.ivanzaytsev.tariffanalyzer.presentation.navigation.AppRoute
 import org.ivanzaytsev.tariffanalyzer.presentation.settings.SettingsScreen
-import org.ivanzaytsev.tariffanalyzer.presentation.tariff.TariffScreen
 import org.koin.compose.koinInject
 
 @Preview
@@ -30,7 +30,7 @@ fun App(
         ThemeMode.Dark -> true
         ThemeMode.Light -> false
     }
-    val backStack = remember { mutableStateListOf<AppRoute>(AppRoute.Tariffs) }
+    val backStack = remember { mutableStateListOf<AppRoute>(AppRoute.Analyzer) }
 
     TariffAnalyzerTheme(
         isDark = isDark,
@@ -46,7 +46,7 @@ fun App(
             entryProvider = { route ->
                 NavEntry(route) {
                     when (route) {
-                        AppRoute.Tariffs -> TariffScreen(
+                        AppRoute.Analyzer -> AnalyzerScreen(
                             onNavigateToSettings = {
                                 if (backStack.lastOrNull() != AppRoute.Settings) {
                                     backStack.add(AppRoute.Settings)
