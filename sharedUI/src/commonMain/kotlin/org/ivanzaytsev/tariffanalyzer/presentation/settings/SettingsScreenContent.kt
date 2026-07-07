@@ -1,19 +1,15 @@
 package org.ivanzaytsev.tariffanalyzer.presentation.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
 import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
+import org.ivanzaytsev.tariffanalyzer.presentation.settings.composables.ThemeModeItem
 import org.jetbrains.compose.resources.stringResource
 import tariff_analyzer.sharedui.generated.resources.Res
 import tariff_analyzer.sharedui.generated.resources.theme_dark
@@ -57,22 +53,4 @@ fun SettingsScreenContent(
             },
         )
     }
-}
-
-@Composable
-private fun ThemeModeItem(
-    title: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    ListItem(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        headlineContent = { Text(title) },
-        leadingContent = {
-            RadioButton(
-                selected = selected,
-                onClick = null,
-            )
-        },
-    )
 }
