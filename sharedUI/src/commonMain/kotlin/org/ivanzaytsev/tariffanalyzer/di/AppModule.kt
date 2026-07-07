@@ -12,9 +12,9 @@ import org.ivanzaytsev.tariffanalyzer.domain.usecase.GetTariffsUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ProcessMessagesUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ValidateConfigUseCase
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationViewModel
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisViewModel
-import org.ivanzaytsev.tariffanalyzer.presentation.settings.SettingsViewModel
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationViewModel
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisViewModel
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.SettingsViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 

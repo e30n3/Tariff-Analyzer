@@ -1,10 +1,10 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.composables
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.composables
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisContract
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.DashboardSection
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.ResultRow
 

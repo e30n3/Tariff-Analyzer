@@ -15,6 +15,8 @@ import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.GenerateConfigUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ValidateConfigUseCase
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationViewModel
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

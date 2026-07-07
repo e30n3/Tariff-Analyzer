@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.configuration
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
@@ -7,10 +7,10 @@ import org.ivanzaytsev.tariffanalyzer.domain.usecase.GenerateConfigUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ValidateConfigUseCase
 import org.ivanzaytsev.tariffanalyzer.presentation.base.BaseViewModel
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract.Action
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract.Effect
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract.OperationStatus
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract.State
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract.Action
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract.Effect
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract.OperationStatus
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract.State
 
 class ConfigurationViewModel(
     private val loadConfigStatusUseCase: LoadConfigStatusUseCase,

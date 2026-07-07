@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.configuration.composables
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.rounded.Fact_check
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.DashboardSection
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.StatusIcon
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.label

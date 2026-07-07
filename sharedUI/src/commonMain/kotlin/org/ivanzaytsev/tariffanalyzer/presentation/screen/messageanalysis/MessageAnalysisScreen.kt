@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.configuration
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ConfigurationScreen() {
-    val viewModel = koinViewModel<ConfigurationViewModel>()
+fun MessageAnalysisScreen() {
+    val viewModel = koinViewModel<MessageAnalysisViewModel>()
 
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -19,13 +19,13 @@ fun ConfigurationScreen() {
     LaunchedEffect(viewModel) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
-                is ConfigurationContract.Effect.ShowMessage ->
+                is MessageAnalysisContract.Effect.ShowMessage ->
                     snackbarHostState.showSnackbar(effect.message)
             }
         }
     }
 
-    ConfigurationScreenContent(
+    MessageAnalysisScreenContent(
         state = state,
         snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction,

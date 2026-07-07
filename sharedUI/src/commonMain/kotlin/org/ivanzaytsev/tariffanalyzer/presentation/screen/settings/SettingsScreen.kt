@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.settings
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.settings
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

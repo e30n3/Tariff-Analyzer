@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.configuration
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration
 
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReference
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus

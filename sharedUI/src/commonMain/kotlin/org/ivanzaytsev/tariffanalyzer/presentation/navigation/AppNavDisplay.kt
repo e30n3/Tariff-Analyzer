@@ -14,9 +14,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.scene.Scene
 import androidx.navigation3.ui.NavDisplay
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationScreen
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisScreen
-import org.ivanzaytsev.tariffanalyzer.presentation.settings.SettingsScreen
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationScreen
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisScreen
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.SettingsScreen
 
 @Composable
 fun AppNavDisplay(

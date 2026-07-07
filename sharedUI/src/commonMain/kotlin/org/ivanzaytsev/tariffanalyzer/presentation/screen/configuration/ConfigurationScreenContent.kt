@@ -1,10 +1,10 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.configuration
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract.Action
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.composables.ConfigStatusSection
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.composables.InitialImportSection
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract.Action
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.composables.ConfigStatusSection
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.composables.InitialImportSection
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.AnalyzerContentScaffold
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.ValidationIssuesSection
 

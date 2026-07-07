@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.configuration.composables
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -17,8 +17,8 @@ import com.composables.icons.materialsymbols.rounded.Upload_file
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFilePurpose
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReference
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract
-import org.ivanzaytsev.tariffanalyzer.presentation.configuration.ConfigurationContract.OperationStatus
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration.ConfigurationContract.OperationStatus
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.DashboardSection
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.FilePickerTile
 

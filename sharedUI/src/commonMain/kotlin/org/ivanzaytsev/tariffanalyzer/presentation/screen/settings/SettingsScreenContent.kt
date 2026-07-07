@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.settings
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
 import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
-import org.ivanzaytsev.tariffanalyzer.presentation.settings.composables.ThemeModeItem
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.composables.ThemeModeItem
 import org.jetbrains.compose.resources.stringResource
 import tariff_analyzer.sharedui.generated.resources.Res
 import tariff_analyzer.sharedui.generated.resources.theme_dark

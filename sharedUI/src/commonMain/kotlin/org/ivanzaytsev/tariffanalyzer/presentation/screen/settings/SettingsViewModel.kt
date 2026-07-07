@@ -1,12 +1,12 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.settings
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.settings
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import org.ivanzaytsev.tariffanalyzer.domain.repository.SettingsRepository
 import org.ivanzaytsev.tariffanalyzer.presentation.base.BaseViewModel
-import org.ivanzaytsev.tariffanalyzer.presentation.settings.SettingsContract.Action
-import org.ivanzaytsev.tariffanalyzer.presentation.settings.SettingsContract.Effect
-import org.ivanzaytsev.tariffanalyzer.presentation.settings.SettingsContract.State
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.SettingsContract.Action
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.SettingsContract.Effect
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.SettingsContract.State
 
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,

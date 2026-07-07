@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CancellationException
@@ -11,10 +11,10 @@ import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessingUpdate
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ProcessMessagesUseCase
 import org.ivanzaytsev.tariffanalyzer.presentation.base.BaseViewModel
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisContract.Action
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisContract.Effect
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisContract.ProcessingStatus
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisContract.State
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract.Action
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract.Effect
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract.ProcessingStatus
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract.State
 
 class MessageAnalysisViewModel(
     private val loadConfigStatusUseCase: LoadConfigStatusUseCase,

@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.composables
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.composables
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,8 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisContract
-import org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis.MessageAnalysisContract.ProcessingStatus
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract.ProcessingStatus
 
 @Composable
 fun ProcessingProgress(state: MessageAnalysisContract.State) {

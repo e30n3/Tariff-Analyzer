@@ -1,4 +1,4 @@
-package org.ivanzaytsev.tariffanalyzer.presentation.settings.composables
+package org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.composables
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
