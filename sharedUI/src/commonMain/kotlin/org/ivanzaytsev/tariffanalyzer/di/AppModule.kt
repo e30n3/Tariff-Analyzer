@@ -1,7 +1,9 @@
 package org.ivanzaytsev.tariffanalyzer.di
 
 import com.russhwolf.settings.Settings
-import org.ivanzaytsev.tariffanalyzer.data.repository.InMemoryAnalyzerConfigRepository
+import org.ivanzaytsev.tariffanalyzer.data.config.createAnalyzerConfigFileStorage
+import org.ivanzaytsev.tariffanalyzer.data.csv.createCsvFileReader
+import org.ivanzaytsev.tariffanalyzer.data.repository.FileAnalyzerConfigRepository
 import org.ivanzaytsev.tariffanalyzer.data.repository.settings.MultiplatformSettingsRepository
 import org.ivanzaytsev.tariffanalyzer.data.repository.MockTariffRepository
 import org.ivanzaytsev.tariffanalyzer.domain.repository.AnalyzerConfigRepository
@@ -20,7 +22,9 @@ import org.koin.dsl.module
 
 val appModule = module {
     single { Settings() }
-    single<AnalyzerConfigRepository> { InMemoryAnalyzerConfigRepository() }
+    single { createAnalyzerConfigFileStorage() }
+    single { createCsvFileReader() }
+    single<AnalyzerConfigRepository> { FileAnalyzerConfigRepository(get(), get()) }
     single<SettingsRepository> { MultiplatformSettingsRepository(get()) }
     single<TariffRepository> { MockTariffRepository() }
     factory { GetTariffsUseCase(get()) }

@@ -2,7 +2,6 @@ package org.ivanzaytsev.tariffanalyzer.presentation.screen.configuration
 
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.GenerateConfigUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ValidateConfigUseCase
@@ -76,13 +75,13 @@ class ConfigurationViewModel(
                 .onSuccess { result ->
                     setState {
                         it.copy(
-                            configStatus = ConfigStatus.Valid,
+                            configStatus = result.status,
                             configPath = result.configPath,
                             validationIssues = result.issues,
                             operationStatus = OperationStatus.Idle,
                         )
                     }
-                    sendEffect(Effect.ShowMessage("Конфигурация skeleton сгенерирована"))
+                    sendEffect(Effect.ShowMessage("Конфигурация сгенерирована"))
                 }
                 .onFailure { throwable ->
                     handleFailure(throwable, "Не удалось сгенерировать конфигурацию")
@@ -99,15 +98,16 @@ class ConfigurationViewModel(
         setState { it.copy(operationStatus = OperationStatus.ValidatingConfig, error = null) }
         viewModelScope.launch {
             runCatching { validateConfigUseCase() }
-                .onSuccess { issues ->
+                .onSuccess { result ->
                     setState {
                         it.copy(
-                            configStatus = ConfigStatus.Valid,
-                            validationIssues = issues,
+                            configStatus = result.status,
+                            configPath = result.configPath,
+                            validationIssues = result.issues,
                             operationStatus = OperationStatus.Idle,
                         )
                     }
-                    sendEffect(Effect.ShowMessage("Skeleton-валидация завершена"))
+                    sendEffect(Effect.ShowMessage("Валидация конфигурации завершена"))
                 }
                 .onFailure { throwable ->
                     handleFailure(throwable, "Не удалось проверить конфигурацию")

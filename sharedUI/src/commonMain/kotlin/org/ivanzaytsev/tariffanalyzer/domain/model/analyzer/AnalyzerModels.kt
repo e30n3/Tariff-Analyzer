@@ -37,6 +37,7 @@ data class ConfigStatusResult(
 )
 
 data class GeneratedConfigResult(
+    val status: ConfigStatus,
     val configPath: String,
     val issues: List<ValidationIssue>,
 )
