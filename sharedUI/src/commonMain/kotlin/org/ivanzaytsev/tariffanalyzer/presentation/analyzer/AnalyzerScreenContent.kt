@@ -1,5 +1,6 @@
 package org.ivanzaytsev.tariffanalyzer.presentation.analyzer
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -98,39 +102,53 @@ fun AnalyzerScreenContent(
             )
         },
     ) { innerPadding ->
-        LazyColumn(
+        val listState = rememberLazyListState()
+        Box(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
-                ConfigStatusSection(
-                    state = state,
-                    onValidate = { onAction(Action.ValidateConfig) },
-                )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                item {
+                    ConfigStatusSection(
+                        state = state,
+                        onValidate = { onAction(Action.ValidateConfig) },
+                    )
+                }
+                item {
+                    InitialImportSection(
+                        state = state,
+                        onTemplatesSelected = { onAction(Action.ChooseTemplatesCsv(it)) },
+                        onTariffSelected = { onAction(Action.ChooseTariffCsv(it)) },
+                        onGenerate = { onAction(Action.GenerateConfig) },
+                    )
+                }
+                item {
+                    MessageProcessingSection(
+                        state = state,
+                        onMessagesSelected = { onAction(Action.ChooseMessagesCsv(it)) },
+                        onStart = { onAction(Action.StartProcessing) },
+                        onCancel = { onAction(Action.CancelProcessing) },
+                    )
+                }
+                item {
+                    ResultSection(state)
+                }
+                item {
+                    ValidationIssuesSection(state.validationIssues)
+                }
             }
-            item {
-                InitialImportSection(
-                    state = state,
-                    onTemplatesSelected = { onAction(Action.ChooseTemplatesCsv(it)) },
-                    onTariffSelected = { onAction(Action.ChooseTariffCsv(it)) },
-                    onGenerate = { onAction(Action.GenerateConfig) },
-                )
-            }
-            item {
-                MessageProcessingSection(
-                    state = state,
-                    onMessagesSelected = { onAction(Action.ChooseMessagesCsv(it)) },
-                    onStart = { onAction(Action.StartProcessing) },
-                    onCancel = { onAction(Action.CancelProcessing) },
-                )
-            }
-            item {
-                ResultSection(state)
-            }
-            item {
-                ValidationIssuesSection(state.validationIssues)
-            }
+            VerticalScrollbar(
+                adapter = rememberScrollbarAdapter(listState),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight()
+                    .padding(vertical = 8.dp, horizontal = 4.dp),
+
+            )
         }
     }
 }
