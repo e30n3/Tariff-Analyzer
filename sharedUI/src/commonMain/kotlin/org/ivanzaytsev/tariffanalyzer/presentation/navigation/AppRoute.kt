@@ -1,7 +1,19 @@
 package org.ivanzaytsev.tariffanalyzer.presentation.navigation
 
-sealed interface AppRoute {
-    data object Configuration : AppRoute
-    data object MessageAnalysis : AppRoute
-    data object Settings : AppRoute
+enum class AppRoute(
+    val navigationContentKey: String,
+    val navigationOrder: Int,
+) {
+    Settings(
+        navigationContentKey = "settings",
+        navigationOrder = 0,
+    ),
+    Configuration(
+        navigationContentKey = "configuration",
+        navigationOrder = 1,
+    ),
+    MessageAnalysis(
+        navigationContentKey = "message_analysis",
+        navigationOrder = 2,
+    ),
 }
