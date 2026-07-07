@@ -5,8 +5,20 @@
     <string name="stop">Stop</string>
     <string name="theme">Theme</string>
     <string name="tariffs_title">Tariffs</string>
+    <string name="settings_title">Settings</string>
+    <string name="back">Back</string>
     <string name="retry">Retry</string>
     <string name="refresh">Refresh</string>
     <string name="price_per_month">%1$s / month</string>
     <string name="data_and_minutes">%1$d GB · %2$d min</string>
+    <string name="input_file_title">Message file</string>
+    <string name="input_file_description">Use a CSV structurally compatible with the sample message files.</string>
+    <string name="pick_file_hint">Drop a file here or click to choose</string>
+    <string name="file_selected">Selected</string>
+    <string name="empty_file">(empty file)</string>
+    <string name="theme_section_title">Theme mode</string>
+    <string name="theme_section_description">The selected mode is saved locally and applied on the next launch.</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
 </resources>

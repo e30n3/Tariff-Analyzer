@@ -11,8 +11,8 @@ Tariff Analyzer находится в активной разработке. Ц�
 
 ## 2. Бизнес-документация
 Перед изменением бизнес-логики, импорта/экспорта файлов, генерации конфигурации, сопоставления шаблонов, расчета тарифов или валидации нужно прочитать:
-- [Бизнес-требования](docs/business-requirements.md)
-- [Синтаксис SMS-шаблонов](docs/template-syntax.md)
+- [Бизнес-требования](.agents/business-requirements.md)
+- [Синтаксис SMS-шаблонов](.agents/template-syntax.md)
 
 Если реализация уточняет или меняет бизнес-правила, обновляй эти документы вместе с кодом.
 
@@ -68,8 +68,29 @@ Tariff Analyzer находится в активной разработке. Ц�
 ### MVI
 Для управления состоянием в Presentation layer используется MVI:
 - **State:** единый источник истины для UI, обычно immutable data class.
-- **Intent / Action:** события от пользователя или системы, обычно sealed interface.
+- **Action:** события от пользователя или системы, обычно sealed interface.
 - **Effect / Event:** одноразовые события, например навигация, диалоги, уведомления.
+
+Для каждого экрана используется шаблон из 4 файлов:
+- `[Feature]Screen.kt` - route-обертка, подключение ViewModel, сбор state/effect и навигационные callback.
+- `[Feature]ScreenContent.kt` - stateless Compose UI, принимает только state и callbacks/actions.
+- `[Feature]ViewModel.kt` - обработка action, обновление state и отправка effect.
+- `[Feature]Contract.kt` - `State`, `Action`, `Effect`.
+
+ViewModel экранов наследуются от `BaseViewModel<State, Action, Effect>`, если нет сильной причины для исключения. `BaseViewModel` отвечает за единый публичный API `state`, `effect`, `onAction(...)` и базовое Kermit-логирование action/state/effect. Навигация и snackbar/dialog события должны идти через `Effect`, а не выполняться напрямую из `ScreenContent`.
+
+### Design System
+В проекте используется Material 3. Готовые компоненты Material 3 имеют приоритет над кастомными: перед добавлением своего компонента нужно проверить список в [.agents/material3-components.md](.agents/material3-components.md).
+
+Кастомные переиспользуемые UI-компоненты размещаются в отдельном модуле `:designSystem`. Они не должны содержать бизнес-логику, file picker, навигацию или обращения к data/domain слоям. Screen-specific layout допускается держать рядом с экраном в `sharedUI`.
+
+Реализация темы приложения, цветовые схемы, дизайн-токены и переиспользуемые UI primitives должны находиться в `:designSystem`. Product/domain настройки темы, например выбранный пользователем `ThemeMode`, остаются в `sharedUI` и передаются в дизайн-систему как простые UI-параметры.
+
+### Navigation
+Навигация строится через Navigation 3 (`androidx.navigation3`). Route-ключи приложения должны быть явно типизированы, например sealed interface/data object, и храниться отдельно от UI content. Переходы инициируются из ViewModel через `Effect`, а изменение back stack выполняет route-обертка или корневой навигационный контейнер.
+
+### Settings
+Пользовательские настройки хранятся через `multiplatform-settings` в Data layer. Presentation обращается к настройкам через domain-интерфейс repository. Для настроек, влияющих на UI сразу после изменения, repository может отдавать `StateFlow`, синхронизированный с сохраненным значением.
 
 ### Large File Processing
 Файл сообщений может быть больше 1 ГБ. Реализация должна обрабатывать его потоково и не загружать весь файл в память. Долгие операции должны отдавать прогресс, поддерживать отмену и возвращать ошибки через use case и UI state.
@@ -79,6 +100,7 @@ Tariff Analyzer находится в активной разработке. Ц�
 - **Strict Typing:** избегай `Any`; используй явные domain model, value object, sealed class и sealed interface для состояний и результатов.
 - **Dependency Injection:** регистрируй новые зависимости в Koin-модулях проекта.
 - **Resources:** для строк, иконок и шрифтов используй Compose Resources, если это соответствует текущей структуре проекта.
+- **Design System:** сначала используй готовые Material 3 компоненты из [.agents/material3-components.md](.agents/material3-components.md); кастомные переиспользуемые компоненты добавляй в `:designSystem`.
 - **Desktop Compatibility:** при изменениях в `commonMain` учитывай Desktop-поведение и работу с большими локальными файлами.
 - **Streaming by Default:** для `full_msg.csv` и аналогичных файлов проектируй API так, чтобы обработка могла идти построчно.
-- **Naming:** экраны называй `[Feature]Screen.kt`, ViewModel - `[Feature]ViewModel.kt`, MVI-контракты - `[Feature]Contract.kt` или размещай рядом с ViewModel, если так принято в модуле.
+- **Naming:** экраны называй `[Feature]Screen.kt`, content-файлы - `[Feature]ScreenContent.kt`, ViewModel - `[Feature]ViewModel.kt`, MVI-контракты - `[Feature]Contract.kt`.

@@ -11,13 +11,15 @@ interface TariffContract {
         val error: String? = null,
     )
 
-    sealed interface Intent {
-        data object Load : Intent
-        data object Refresh : Intent
-        data class Select(val id: String) : Intent
+    sealed interface Action {
+        data object Load : Action
+        data object Refresh : Action
+        data object OpenSettings : Action
+        data class Select(val id: String) : Action
     }
 
     sealed interface Effect {
         data class ShowMessage(val message: String) : Effect
+        data object NavigateToSettings : Effect
     }
 }
