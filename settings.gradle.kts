@@ -31,3 +31,4 @@ dependencyResolutionManagement {
 include(":sharedUI")
 include(":desktopApp")
 include(":designSystem")
+include(":scripts")

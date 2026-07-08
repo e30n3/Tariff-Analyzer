@@ -16,3 +16,4 @@ Pods/
 *.gpg
 *yarn.lock
 desktopApp/tariff-analyzer-config.json
+sample_files/
