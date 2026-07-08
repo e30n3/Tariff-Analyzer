@@ -2,6 +2,9 @@ package org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -11,7 +14,11 @@ import kotlinx.coroutines.test.setMain
 import org.ivanzaytsev.tariffanalyzer.data.repository.InMemoryAnalyzerConfigRepository
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFilePurpose
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReference
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerConfig
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessMessagesRequest
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessingUpdate
+import org.ivanzaytsev.tariffanalyzer.domain.repository.MessageAnalysisFileProcessor
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.GenerateConfigUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ProcessMessagesUseCase
@@ -78,7 +85,7 @@ class MessageAnalysisViewModelTest {
     private fun createViewModel(repository: InMemoryAnalyzerConfigRepository): MessageAnalysisViewModel =
         MessageAnalysisViewModel(
             loadConfigStatusUseCase = LoadConfigStatusUseCase(repository),
-            processMessagesUseCase = ProcessMessagesUseCase(),
+            processMessagesUseCase = ProcessMessagesUseCase(repository, FakeMessageAnalysisFileProcessor()),
         )
 
     private suspend fun generateConfig(repository: InMemoryAnalyzerConfigRepository) {
@@ -97,4 +104,30 @@ class MessageAnalysisViewModelTest {
         sizeBytes = 128,
         purpose = purpose,
     )
+
+    private class FakeMessageAnalysisFileProcessor : MessageAnalysisFileProcessor {
+        override fun process(
+            request: ProcessMessagesRequest,
+            config: AnalyzerConfig,
+        ): Flow<ProcessingUpdate> = flow {
+            val totalRowsHint = 1_000L
+            for (step in 1..5) {
+                delay(120.milliseconds)
+                emit(
+                    ProcessingUpdate.Progress(
+                        processedRows = step * 200L,
+                        totalRowsHint = totalRowsHint,
+                        progressFraction = step / 5f,
+                    ),
+                )
+            }
+            emit(
+                ProcessingUpdate.Completed(
+                    processedRows = totalRowsHint,
+                    outputCsvPath = "/tmp/full_msg_analyzed.csv",
+                    logPath = "/tmp/full_msg_processing.log",
+                ),
+            )
+        }
+    }
 }

@@ -15,3 +15,4 @@ Pods/
 *.jks
 *.gpg
 *yarn.lock
+desktopApp/tariff-analyzer-config.json

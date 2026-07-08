@@ -7,8 +7,10 @@ import org.ivanzaytsev.tariffanalyzer.data.repository.FileAnalyzerConfigReposito
 import org.ivanzaytsev.tariffanalyzer.data.repository.settings.MultiplatformSettingsRepository
 import org.ivanzaytsev.tariffanalyzer.data.repository.MockTariffRepository
 import org.ivanzaytsev.tariffanalyzer.domain.repository.AnalyzerConfigRepository
+import org.ivanzaytsev.tariffanalyzer.domain.repository.MessageAnalysisFileProcessor
 import org.ivanzaytsev.tariffanalyzer.domain.repository.SettingsRepository
 import org.ivanzaytsev.tariffanalyzer.domain.repository.TariffRepository
+import org.ivanzaytsev.tariffanalyzer.domain.repository.createMessageAnalysisFileProcessor
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.GenerateConfigUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.GetTariffsUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
@@ -24,6 +26,7 @@ val appModule = module {
     single { Settings() }
     single { createAnalyzerConfigFileStorage() }
     single { createCsvFileReader() }
+    single<MessageAnalysisFileProcessor> { createMessageAnalysisFileProcessor() }
     single<AnalyzerConfigRepository> { FileAnalyzerConfigRepository(get(), get()) }
     single<SettingsRepository> { MultiplatformSettingsRepository(get()) }
     single<TariffRepository> { MockTariffRepository() }
@@ -31,7 +34,7 @@ val appModule = module {
     factory { LoadConfigStatusUseCase(get()) }
     factory { GenerateConfigUseCase(get()) }
     factory { ValidateConfigUseCase(get()) }
-    factory { ProcessMessagesUseCase() }
+    factory { ProcessMessagesUseCase(get(), get()) }
     viewModelOf(::ConfigurationViewModel)
     viewModelOf(::MessageAnalysisViewModel)
     viewModelOf(::SettingsViewModel)

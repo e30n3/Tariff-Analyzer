@@ -77,6 +77,33 @@ class FileAnalyzerConfigRepositoryTest {
         assertTrue(result.issues.isEmpty())
     }
 
+    @Test
+    fun duplicateTariffsWithoutExplicitRangeBecomeSequentialRanges() = runTest {
+        val storage = FakeConfigFileStorage()
+        val repository = repository(
+            storage = storage,
+            csvFileReader = FakeCsvFileReader(
+                tariffCsv = """
+                "Описание";"Количество";"Цена (руб. с НДС)";"Стоимость (руб. с НДС)"
+                "Оплата трафика по услуге ""Пропуск sms-трафика"" yota Рекламный";"10";"5.170000000000";"51.7"
+                "Оплата трафика по услуге ""Пропуск sms-трафика"" yota Рекламный";"5";"5.170000000000";"25.85"
+                """.trimIndent(),
+            ),
+        )
+
+        repository.generateConfig(
+            templatesFile = file("message_templates.csv", AnalyzerFilePurpose.MessageTemplates),
+            tariffFile = file("tariff.csv", AnalyzerFilePurpose.Tariff),
+        )
+
+        val config = repository.loadConfig()
+
+        assertEquals(1L, config.tariffs[0].range.from)
+        assertEquals(10L, config.tariffs[0].range.to)
+        assertEquals(11L, config.tariffs[1].range.from)
+        assertEquals(15L, config.tariffs[1].range.to)
+    }
+
     private fun repository(
         storage: FakeConfigFileStorage,
         csvFileReader: CsvFileReader = FakeCsvFileReader(),
@@ -105,7 +132,12 @@ class FileAnalyzerConfigRepositoryTest {
         }
     }
 
-    private class FakeCsvFileReader : CsvFileReader {
+    private class FakeCsvFileReader(
+        private val tariffCsv: String = """
+            "Описание";"Количество";"Цена (руб. с НДС)";"Стоимость (руб. с НДС)"
+            "Оплата трафика по услуге ""Пропуск sms-трафика"" beeline Сервисный (по шкале от 1)";"5000";"2.710000000000";"13550"
+        """.trimIndent(),
+    ) : CsvFileReader {
         override suspend fun readWindows1251Text(path: String): String =
             if (path.endsWith("message_templates.csv")) {
                 """
@@ -113,10 +145,7 @@ class FileAnalyzerConfigRepositoryTest {
                 "39324";"код %d";"OTP_Bank";"СМС:mts:Сервисный, СМС:beeline:Сервисный"
                 """.trimIndent()
             } else {
-                """
-                "Описание";"Количество";"Цена (руб. с НДС)";"Стоимость (руб. с НДС)"
-                "Оплата трафика по услуге ""Пропуск sms-трафика"" beeline Сервисный (по шкале от 1)";"5000";"2.710000000000";"13550"
-                """.trimIndent()
+                tariffCsv
             }
     }
 }

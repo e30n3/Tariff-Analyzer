@@ -3,6 +3,7 @@ package org.ivanzaytsev.tariffanalyzer.domain.repository
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatusResult
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.GeneratedConfigResult
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReference
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerConfig
 
 interface AnalyzerConfigRepository {
     suspend fun getConfigStatus(): ConfigStatusResult
@@ -11,4 +12,5 @@ interface AnalyzerConfigRepository {
         tariffFile: AnalyzerFileReference,
     ): GeneratedConfigResult
     suspend fun validateConfig(): ConfigStatusResult
+    suspend fun loadConfig(): AnalyzerConfig
 }

@@ -5,15 +5,27 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import org.ivanzaytsev.tariffanalyzer.data.config.AnalyzerConfigFileStorage
 import org.ivanzaytsev.tariffanalyzer.data.csv.CsvFileReader
 import org.ivanzaytsev.tariffanalyzer.data.csv.SemicolonCsvParser
+import org.ivanzaytsev.tariffanalyzer.domain.analyzer.AnalyzerNormalization
+import org.ivanzaytsev.tariffanalyzer.domain.analyzer.TemplatePatternCompiler
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerConfig
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReference
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerSource
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatusResult
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.GeneratedConfigResult
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.MessageTemplateRule
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.TariffRange
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.TariffRule
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.TrafficMapping
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ValidationIssue
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ValidationIssueSeverity
 import org.ivanzaytsev.tariffanalyzer.domain.repository.AnalyzerConfigRepository
@@ -109,6 +121,18 @@ class FileAnalyzerConfigRepository(
         )
     }
 
+    override suspend fun loadConfig(): AnalyzerConfig {
+        if (!storage.exists()) {
+            error("Конфигурация не найдена: ${storage.configPath}")
+        }
+        val root = json.parseToJsonElement(storage.readText()).jsonObject
+        val issues = validateRoot(root)
+        if (issues.any { it.severity == ValidationIssueSeverity.Error }) {
+            error("Конфигурация некорректна: ${issues.joinToString { "${it.location}: ${it.message}" }}")
+        }
+        return parseConfig(root)
+    }
+
     private fun parseTemplates(
         rows: List<List<String>>,
         issues: MutableList<ValidationIssue>,
@@ -192,7 +216,7 @@ class FileAnalyzerConfigRepository(
                 add(
                     buildJsonObject {
                         put("channel", parts[0])
-                        put("operator", normalizeOperator(parts[1]))
+                        put("operator", AnalyzerNormalization.normalizeOperator(parts[1]))
                         put("trafficType", parts[2])
                         put("sourceValue", mapping)
                     },
@@ -221,6 +245,8 @@ class FileAnalyzerConfigRepository(
             return buildJsonArray { }
         }
 
+        val lastRangeEndByKey = mutableMapOf<TariffBuildKey, Long>()
+
         return buildJsonArray {
             rows.drop(1).forEachIndexed { rowIndex, row ->
                 val csvLine = rowIndex + 2
@@ -229,8 +255,15 @@ class FileAnalyzerConfigRepository(
                 val quantity = row.valueAt(columnIndexes.getValue("Количество")).parseLong()
                 val price = row.valueAt(columnIndexes.getValue("Цена (руб. с НДС)")).trim()
                 val totalCost = row.valueAt(columnIndexes.getValue("Стоимость (руб. с НДС)")).trim()
-                val rangeStart = parsed.rangeStart ?: 1L
+                val tariffKey = TariffBuildKey(
+                    operator = AnalyzerNormalization.normalizeOperator(parsed.operator),
+                    trafficType = parsed.trafficType.trim().lowercase(),
+                )
+                val rangeStart = parsed.rangeStart ?: (lastRangeEndByKey[tariffKey]?.plus(1L) ?: 1L)
                 val rangeEnd = quantity?.let { rangeStart + it - 1L }
+                if (rangeEnd != null) {
+                    lastRangeEndByKey[tariffKey] = rangeEnd
+                }
 
                 if (price.isEmpty()) {
                     issues.add(
@@ -244,7 +277,7 @@ class FileAnalyzerConfigRepository(
 
                 add(
                     buildJsonObject {
-                        put("operator", normalizeOperator(parsed.operator))
+                        put("operator", AnalyzerNormalization.normalizeOperator(parsed.operator))
                         put("trafficType", parsed.trafficType)
                         put("priceWithVat", price)
                         put("quantity", quantity ?: 0L)
@@ -335,7 +368,74 @@ class FileAnalyzerConfigRepository(
                 ),
             )
         }
+
+        if (none { it.severity == ValidationIssueSeverity.Error }) {
+            runCatching {
+                val config = parseConfig(root)
+                config.templates.forEach { template ->
+                    TemplatePatternCompiler.compile(template)
+                }
+            }.onFailure { throwable ->
+                add(
+                    ValidationIssue(
+                        severity = ValidationIssueSeverity.Error,
+                        location = "\$",
+                        message = throwable.message ?: "Некорректная конфигурация.",
+                    ),
+                )
+            }
+        }
     }
+
+    private fun parseConfig(root: JsonObject): AnalyzerConfig = AnalyzerConfig(
+        templates = root.getValue("templates").jsonArray.mapIndexed { index, element ->
+            val template = element.jsonObject
+            MessageTemplateRule(
+                id = template.requiredString("id", "\$.templates[$index].id"),
+                text = template.requiredString("text", "\$.templates[$index].text"),
+                senderName = template.requiredString("senderName", "\$.templates[$index].senderName"),
+                trafficMappings = template.getValue("trafficMappings").jsonArray.mapIndexed { mappingIndex, mappingElement ->
+                    val mapping = mappingElement.jsonObject
+                    TrafficMapping(
+                        channel = mapping.requiredString(
+                            name = "channel",
+                            location = "\$.templates[$index].trafficMappings[$mappingIndex].channel",
+                        ),
+                        operator = AnalyzerNormalization.normalizeOperator(
+                            mapping.requiredString(
+                                name = "operator",
+                                location = "\$.templates[$index].trafficMappings[$mappingIndex].operator",
+                            ),
+                        ),
+                        trafficType = mapping.requiredString(
+                            name = "trafficType",
+                            location = "\$.templates[$index].trafficMappings[$mappingIndex].trafficType",
+                        ),
+                        sourceValue = mapping["sourceValue"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+                    )
+                },
+                source = template["source"]?.jsonObject?.toAnalyzerSource(),
+            )
+        },
+        tariffs = root.getValue("tariffs").jsonArray.mapIndexed { index, element ->
+            val tariff = element.jsonObject
+            val range = tariff.getValue("range").jsonObject
+            TariffRule(
+                operator = AnalyzerNormalization.normalizeOperator(
+                    tariff.requiredString("operator", "\$.tariffs[$index].operator"),
+                ),
+                trafficType = tariff.requiredString("trafficType", "\$.tariffs[$index].trafficType"),
+                priceWithVat = tariff.requiredString("priceWithVat", "\$.tariffs[$index].priceWithVat"),
+                quantity = tariff["quantity"]?.jsonPrimitive?.longOrNull ?: 0L,
+                range = TariffRange(
+                    from = range["from"]?.jsonPrimitive?.longOrNull
+                        ?: error("Отсутствует обязательное поле \$.tariffs[$index].range.from."),
+                    to = range["to"]?.jsonPrimitive?.longOrNull,
+                ),
+                source = tariff["source"]?.jsonObject?.toAnalyzerSource(),
+            )
+        },
+    )
 
     private fun statusFor(issues: List<ValidationIssue>): ConfigStatus =
         if (issues.any { it.severity == ValidationIssueSeverity.Error }) {
@@ -358,19 +458,24 @@ class FileAnalyzerConfigRepository(
         .takeIf { it.isNotEmpty() }
         ?.toLongOrNull()
 
-    private fun normalizeOperator(value: String): String = when (value.trim().lowercase()) {
-        "t2" -> "tele2"
-        "мтс" -> "mts"
-        "мегафон" -> "megafon"
-        "билайн" -> "beeline"
-        "мотив" -> "motiw"
-        "ростелеком" -> "rostelecom"
-        else -> value.trim().lowercase()
-    }
+    private fun JsonObject.requiredString(name: String, location: String): String =
+        this[name]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
+            ?: error("Отсутствует обязательное поле $location.")
+
+    private fun JsonObject.toAnalyzerSource(): AnalyzerSource = AnalyzerSource(
+        csvLine = this["csvLine"]?.jsonPrimitive?.contentOrNull?.toIntOrNull(),
+        description = this["description"]?.jsonPrimitive?.contentOrNull,
+        rawValue = this["trafficTypesRaw"]?.jsonPrimitive?.contentOrNull,
+    )
 
     private data class ParsedTrafficTariff(
         val operator: String,
         val trafficType: String,
         val rangeStart: Long?,
+    )
+
+    private data class TariffBuildKey(
+        val operator: String,
+        val trafficType: String,
     )
 }
