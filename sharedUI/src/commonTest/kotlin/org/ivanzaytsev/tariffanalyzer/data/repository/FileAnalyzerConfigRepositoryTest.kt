@@ -78,6 +78,28 @@ class FileAnalyzerConfigRepositoryTest {
     }
 
     @Test
+    fun nonNumericTariffPriceMakesConfigInvalid() = runTest {
+        val storage = FakeConfigFileStorage()
+        val repository = repository(
+            storage = storage,
+            csvFileReader = FakeCsvFileReader(
+                tariffCsv = """
+                "Описание";"Количество";"Цена (руб. с НДС)";"Стоимость (руб. с НДС)"
+                "Оплата трафика по услуге ""Пропуск sms-трафика"" yota Рекламный";"10";"не число";"51.7"
+                """.trimIndent(),
+            ),
+        )
+
+        val result = repository.generateConfig(
+            templatesFile = file("message_templates.csv", AnalyzerFilePurpose.MessageTemplates),
+            tariffFile = file("tariff.csv", AnalyzerFilePurpose.Tariff),
+        )
+
+        assertEquals(ConfigStatus.Invalid, result.status)
+        assertTrue(result.issues.any { it.location == "\$.tariffs[0].priceWithVat" })
+    }
+
+    @Test
     fun duplicateTariffsWithoutExplicitRangeBecomeSequentialRanges() = runTest {
         val storage = FakeConfigFileStorage()
         val repository = repository(

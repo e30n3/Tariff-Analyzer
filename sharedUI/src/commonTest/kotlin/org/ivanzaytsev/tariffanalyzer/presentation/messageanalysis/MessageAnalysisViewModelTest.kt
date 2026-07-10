@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.ivanzaytsev.tariffanalyzer.data.repository.InMemoryAnalyzerConfigRepository
+import org.ivanzaytsev.tariffanalyzer.domain.analyzer.AnalysisSummaryAccumulator
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFilePurpose
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReference
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerConfig
@@ -63,6 +64,7 @@ class MessageAnalysisViewModelTest {
         assertEquals(1f, viewModel.state.value.progressFraction)
         assertNotNull(viewModel.state.value.outputCsvPath)
         assertNotNull(viewModel.state.value.logPath)
+        assertNotNull(viewModel.state.value.summary)
     }
 
     @Test
@@ -80,6 +82,25 @@ class MessageAnalysisViewModelTest {
 
         assertEquals(MessageAnalysisContract.ProcessingStatus.Cancelled, viewModel.state.value.processingStatus)
         assertEquals(null, viewModel.state.value.outputCsvPath)
+    }
+
+    @Test
+    fun newAnalysisClearsCompletedDashboardState() = runTest(dispatcher) {
+        val repository = InMemoryAnalyzerConfigRepository()
+        generateConfig(repository)
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onAction(MessageAnalysisContract.Action.ChooseMessagesCsv(file("full_msg.csv", AnalyzerFilePurpose.Messages)))
+        viewModel.onAction(MessageAnalysisContract.Action.StartProcessing)
+        advanceUntilIdle()
+
+        viewModel.onAction(MessageAnalysisContract.Action.StartNewAnalysis)
+
+        assertEquals(MessageAnalysisContract.ProcessingStatus.Idle, viewModel.state.value.processingStatus)
+        assertEquals(null, viewModel.state.value.selectedMessagesFile)
+        assertEquals(null, viewModel.state.value.summary)
+        assertEquals(null, viewModel.state.value.outputCsvPath)
+        assertEquals(null, viewModel.state.value.logPath)
     }
 
     private fun createViewModel(repository: InMemoryAnalyzerConfigRepository): MessageAnalysisViewModel =
@@ -126,6 +147,7 @@ class MessageAnalysisViewModelTest {
                     processedRows = totalRowsHint,
                     outputCsvPath = "/tmp/full_msg_analyzed.csv",
                     logPath = "/tmp/full_msg_processing.log",
+                    summary = AnalysisSummaryAccumulator().build(),
                 ),
             )
         }

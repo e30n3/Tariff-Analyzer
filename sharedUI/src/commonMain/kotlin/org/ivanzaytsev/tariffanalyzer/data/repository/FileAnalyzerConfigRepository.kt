@@ -21,6 +21,7 @@ import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReferenc
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerSource
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatusResult
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.DecimalAmount
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.GeneratedConfigResult
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.MessageTemplateRule
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.TariffRange
@@ -367,6 +368,20 @@ class FileAnalyzerConfigRepository(
                     message = "Секция tariffs должна быть массивом.",
                 ),
             )
+        } else {
+            tariffs.forEachIndexed { index, element ->
+                val tariff = element as? JsonObject ?: return@forEachIndexed
+                val price = tariff["priceWithVat"]?.jsonPrimitive?.contentOrNull
+                if (!price.isNullOrBlank() && DecimalAmount.parse(price) == null) {
+                    add(
+                        ValidationIssue(
+                            severity = ValidationIssueSeverity.Error,
+                            location = "\$.tariffs[$index].priceWithVat",
+                            message = "Цена должна быть корректным десятичным числом.",
+                        ),
+                    )
+                }
+            }
         }
 
         if (none { it.severity == ValidationIssueSeverity.Error }) {

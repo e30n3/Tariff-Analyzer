@@ -3,6 +3,8 @@ package org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract.Action
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisContract.ProcessingStatus
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.dashboard.AnalysisDashboardContent
 import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.composables.MessageProcessingSection
 import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.composables.ResultSection
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.AnalyzerContentScaffold
@@ -14,6 +16,15 @@ fun MessageAnalysisScreenContent(
     snackbarHostState: SnackbarHostState,
     onAction: (Action) -> Unit,
 ) {
+    if (state.processingStatus is ProcessingStatus.Completed && state.summary != null) {
+        AnalysisDashboardContent(
+            state = state,
+            snackbarHostState = snackbarHostState,
+            onStartNewAnalysis = { onAction(Action.StartNewAnalysis) },
+        )
+        return
+    }
+
     AnalyzerContentScaffold(snackbarHostState) {
         item {
             MessageProcessingSection(

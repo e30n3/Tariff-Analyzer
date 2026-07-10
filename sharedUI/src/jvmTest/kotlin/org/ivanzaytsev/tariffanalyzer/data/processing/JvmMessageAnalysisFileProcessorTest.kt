@@ -58,6 +58,11 @@ class JvmMessageAnalysisFileProcessorTest {
             val log = File(completed.logPath).readText()
 
             assertEquals(1L, completed.processedRows)
+            assertEquals(1L, completed.summary.processedRows)
+            assertEquals("4.43", completed.summary.currentCost.total.toPlainString())
+            assertEquals("1.90", completed.summary.correctCost.total.toPlainString())
+            assertEquals("2.53", completed.summary.costDifference.toPlainString())
+            assertEquals(1L, completed.summary.mismatchRows)
             assertTrue(utf8OutputFile.isFile)
             assertEquals(output, utf8Output)
             assertTrue(output.lines().first().contains(AnalyzerOutputColumns.PROCESSING_ERRORS))

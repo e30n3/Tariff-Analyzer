@@ -1,6 +1,7 @@
 package org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis
 
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerFileReference
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalysisSummary
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ValidationIssue
 
@@ -18,6 +19,7 @@ interface MessageAnalysisContract {
         val progressFraction: Float = 0f,
         val outputCsvPath: String? = null,
         val logPath: String? = null,
+        val summary: AnalysisSummary? = null,
         val error: String? = null,
     ) {
         val canStartProcessing: Boolean
@@ -38,6 +40,7 @@ interface MessageAnalysisContract {
         data class ChooseMessagesCsv(val file: AnalyzerFileReference) : Action
         data object StartProcessing : Action
         data object CancelProcessing : Action
+        data object StartNewAnalysis : Action
     }
 
     sealed interface Effect {

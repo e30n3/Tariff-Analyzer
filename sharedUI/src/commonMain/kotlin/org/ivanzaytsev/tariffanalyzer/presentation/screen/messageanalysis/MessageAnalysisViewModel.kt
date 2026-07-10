@@ -39,6 +39,7 @@ class MessageAnalysisViewModel(
 
             Action.StartProcessing -> startProcessing()
             Action.CancelProcessing -> cancelProcessing()
+            Action.StartNewAnalysis -> startNewAnalysis()
         }
     }
 
@@ -82,6 +83,7 @@ class MessageAnalysisViewModel(
                 progressFraction = 0f,
                 outputCsvPath = null,
                 logPath = null,
+                summary = null,
                 error = null,
             )
         }
@@ -105,6 +107,7 @@ class MessageAnalysisViewModel(
                                 progressFraction = 1f,
                                 outputCsvPath = update.outputCsvPath,
                                 logPath = update.logPath,
+                                summary = update.summary,
                             )
                         }
                     }
@@ -128,6 +131,23 @@ class MessageAnalysisViewModel(
             )
         }
         sendEffect(Effect.ShowMessage("Обработка отменена"))
+    }
+
+    private fun startNewAnalysis() {
+        if (processingJob?.isActive == true) return
+        setState {
+            it.copy(
+                selectedMessagesFile = null,
+                processingStatus = ProcessingStatus.Idle,
+                processedRows = 0,
+                totalRowsHint = null,
+                progressFraction = 0f,
+                outputCsvPath = null,
+                logPath = null,
+                summary = null,
+                error = null,
+            )
+        }
     }
 
     private fun handleFailure(throwable: Throwable, fallbackMessage: String) {

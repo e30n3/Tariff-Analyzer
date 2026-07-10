@@ -3,6 +3,8 @@ package org.ivanzaytsev.tariffanalyzer.domain.analyzer
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerConfig
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerInputColumns
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerOutputColumns
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessingIssue
+import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessingIssueKind
 
 class MessageAnalyzer(
     config: AnalyzerConfig,
@@ -16,7 +18,7 @@ class MessageAnalyzer(
         val rawOperator = row.value(AnalyzerInputColumns.OPERATOR)
         val operator = AnalyzerNormalization.normalizeOperator(rawOperator)
         val currentTrafficType = row.value(AnalyzerInputColumns.CURRENT_TRAFFIC_TYPE).trim()
-        val errors = mutableListOf<String>()
+        val issues = mutableListOf<ProcessingIssue>()
         val logEntries = mutableListOf<String>()
 
         val matches = templateMatcher.findMatches(senderName, smsText)
@@ -27,13 +29,13 @@ class MessageAnalyzer(
         val correctTrafficType = when {
             selectedTemplate == null -> {
                 val message = "Шаблон не найден"
-                errors.add(message)
+                issues.add(ProcessingIssue(ProcessingIssueKind.TemplateNotFound, message))
                 logEntries.add(row.logMessage(message, senderName, rawOperator, currentTrafficType))
                 currentTrafficType
             }
             selectedMapping == null -> {
                 val message = "Не найден тип трафика для оператора '$rawOperator' в шаблоне '${selectedTemplate.id}'"
-                errors.add(message)
+                issues.add(ProcessingIssue(ProcessingIssueKind.OperatorTrafficMappingNotFound, message))
                 logEntries.add(
                     row.logMessage(
                         message = message,
@@ -50,7 +52,7 @@ class MessageAnalyzer(
 
         if (matches.size > 1) {
             val message = "Конфликт шаблонов: ${matches.joinToString { it.id }}"
-            errors.add(message)
+            issues.add(ProcessingIssue(ProcessingIssueKind.TemplateConflict, message))
             logEntries.add(
                 row.logMessage(
                     message = message,
@@ -66,14 +68,14 @@ class MessageAnalyzer(
         val currentPrice = tariffCalculator.priceFor(operator, currentTrafficType, TariffScenario.Current)
         if (currentPrice is TariffPriceResult.NotFound) {
             val message = "Тариф не найден для текущего типа: оператор '$rawOperator', тип '$currentTrafficType'"
-            errors.add(message)
+            issues.add(ProcessingIssue(ProcessingIssueKind.CurrentTariffNotFound, message))
             logEntries.add(row.logMessage(message, senderName, rawOperator, currentTrafficType, correctTrafficType))
         }
 
         val correctPrice = tariffCalculator.priceFor(operator, correctTrafficType, TariffScenario.Correct)
         if (correctPrice is TariffPriceResult.NotFound) {
             val message = "Тариф не найден для правильного типа: оператор '$rawOperator', тип '$correctTrafficType'"
-            errors.add(message)
+            issues.add(ProcessingIssue(ProcessingIssueKind.CorrectTariffNotFound, message))
             logEntries.add(row.logMessage(message, senderName, rawOperator, currentTrafficType, correctTrafficType))
         }
 
@@ -84,13 +86,21 @@ class MessageAnalyzer(
             if (currentTrafficType != correctTrafficType) "да" else "нет",
             if (selectedTemplate == null) "не определен" else "определен",
             if (matches.size > 1) "конфликт" else "без конфликта",
-            errors.distinct().joinToString(" | "),
+            issues.map { it.message }.distinct().joinToString(" | "),
         )
 
         return MessageAnalysisResult(
             additionalValuesByColumn = AnalyzerOutputColumns.all.zip(additionalValues).toMap(),
             additionalValues = additionalValues,
             logEntries = logEntries,
+            operator = operator,
+            currentTrafficType = currentTrafficType,
+            correctTrafficType = correctTrafficType,
+            currentPrice = currentPrice.foundPriceOrNull(),
+            correctPrice = correctPrice.foundPriceOrNull(),
+            isTypeMismatch = currentTrafficType != correctTrafficType,
+            isCorrectTypeDetermined = selectedMapping != null,
+            issues = issues,
         )
     }
 
@@ -111,7 +121,20 @@ data class MessageAnalysisResult(
     val additionalValuesByColumn: Map<String, String>,
     val additionalValues: List<String>,
     val logEntries: List<String>,
+    val operator: String,
+    val currentTrafficType: String,
+    val correctTrafficType: String,
+    val currentPrice: String?,
+    val correctPrice: String?,
+    val isTypeMismatch: Boolean,
+    val isCorrectTypeDetermined: Boolean,
+    val issues: List<ProcessingIssue>,
 )
+
+private fun TariffPriceResult.foundPriceOrNull(): String? = when (this) {
+    is TariffPriceResult.Found -> priceWithVat
+    is TariffPriceResult.NotFound -> null
+}
 
 private fun MessageCsvRow.logMessage(
     message: String,

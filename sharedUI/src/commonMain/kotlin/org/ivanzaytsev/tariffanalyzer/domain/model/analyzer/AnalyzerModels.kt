@@ -57,5 +57,6 @@ sealed interface ProcessingUpdate {
         val processedRows: Long,
         val outputCsvPath: String,
         val logPath: String,
+        val summary: AnalysisSummary,
     ) : ProcessingUpdate
 }

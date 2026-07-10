@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
 import org.ivanzaytsev.tariffanalyzer.data.csv.SemicolonCsvParser
 import org.ivanzaytsev.tariffanalyzer.domain.analyzer.MessageAnalyzer
+import org.ivanzaytsev.tariffanalyzer.domain.analyzer.AnalysisSummaryAccumulator
 import org.ivanzaytsev.tariffanalyzer.domain.analyzer.MessageCsvRow
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerConfig
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerInputColumns
@@ -45,6 +46,7 @@ private class JvmMessageAnalysisFileProcessor(
         val tempLog = File(outputFiles.logPath + PARTIAL_SUFFIX)
         var processedRows = 0L
         var processedBytes = 0L
+        val summaryAccumulator = AnalysisSummaryAccumulator()
 
         try {
             val analyzer = MessageAnalyzer(config)
@@ -81,9 +83,10 @@ private class JvmMessageAnalysisFileProcessor(
                                         valuesByColumn = valuesByColumn,
                                     ),
                                 )
+                                summaryAccumulator.add(analysis)
 
                                 val outputValues = values + analysis.additionalValues
-                                writeCsvRecord(csvWriter, outputValues)
+                                //writeCsvRecord(csvWriter, outputValues)
                                 writeCsvRecord(utf8CsvWriter, outputValues)
                                 analysis.logEntries.forEach { entry ->
                                     logWriter.write(entry)
@@ -115,6 +118,7 @@ private class JvmMessageAnalysisFileProcessor(
                     processedRows = processedRows,
                     outputCsvPath = outputFiles.outputCsvPath,
                     logPath = outputFiles.logPath,
+                    summary = summaryAccumulator.build(),
                 ),
             )
         } catch (throwable: Throwable) {
