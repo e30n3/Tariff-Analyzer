@@ -55,7 +55,11 @@ class ConfigurationViewModel(
                     }
                 }
                 .onFailure { throwable ->
-                    handleFailure(throwable, "Не удалось загрузить статус конфигурации")
+                    handleFailure(
+                        throwable = throwable,
+                        fallbackMessage = "Не удалось загрузить статус конфигурации",
+                        logOperation = "Loading configuration status",
+                    )
                 }
         }
     }
@@ -84,7 +88,11 @@ class ConfigurationViewModel(
                     sendEffect(Effect.ShowMessage("Конфигурация сгенерирована"))
                 }
                 .onFailure { throwable ->
-                    handleFailure(throwable, "Не удалось сгенерировать конфигурацию")
+                    handleFailure(
+                        throwable = throwable,
+                        fallbackMessage = "Не удалось сгенерировать конфигурацию",
+                        logOperation = "Generating configuration",
+                    )
                 }
         }
     }
@@ -110,14 +118,22 @@ class ConfigurationViewModel(
                     sendEffect(Effect.ShowMessage("Валидация конфигурации завершена"))
                 }
                 .onFailure { throwable ->
-                    handleFailure(throwable, "Не удалось проверить конфигурацию")
+                    handleFailure(
+                        throwable = throwable,
+                        fallbackMessage = "Не удалось проверить конфигурацию",
+                        logOperation = "Validating configuration",
+                    )
                 }
         }
     }
 
-    private fun handleFailure(throwable: Throwable, fallbackMessage: String) {
+    private fun handleFailure(
+        throwable: Throwable,
+        fallbackMessage: String,
+        logOperation: String,
+    ) {
         val message = throwable.message ?: fallbackMessage
-        logError(throwable, message)
+        logError(throwable, logOperation)
         setState {
             it.copy(
                 isLoadingConfigStatus = false,

@@ -4,6 +4,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -19,7 +21,9 @@ import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalyzerConfig
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessMessagesRequest
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessingUpdate
+import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
 import org.ivanzaytsev.tariffanalyzer.domain.repository.MessageAnalysisFileProcessor
+import org.ivanzaytsev.tariffanalyzer.domain.repository.SettingsRepository
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.GenerateConfigUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ProcessMessagesUseCase
@@ -51,7 +55,7 @@ class MessageAnalysisViewModelTest {
     fun processingProgressCompletesWithOutputPaths() = runTest(dispatcher) {
         val repository = InMemoryAnalyzerConfigRepository()
         generateConfig(repository)
-        val viewModel = createViewModel(repository)
+        val viewModel = createViewModel(repository, debugMode = true)
         advanceUntilIdle()
         viewModel.onAction(MessageAnalysisContract.Action.ChooseMessagesCsv(file("full_msg.csv", AnalyzerFilePurpose.Messages)))
 
@@ -103,10 +107,14 @@ class MessageAnalysisViewModelTest {
         assertEquals(null, viewModel.state.value.logPath)
     }
 
-    private fun createViewModel(repository: InMemoryAnalyzerConfigRepository): MessageAnalysisViewModel =
+    private fun createViewModel(
+        repository: InMemoryAnalyzerConfigRepository,
+        debugMode: Boolean = false,
+    ): MessageAnalysisViewModel =
         MessageAnalysisViewModel(
             loadConfigStatusUseCase = LoadConfigStatusUseCase(repository),
             processMessagesUseCase = ProcessMessagesUseCase(repository, FakeMessageAnalysisFileProcessor()),
+            settingsRepository = FakeSettingsRepository(debugMode),
         )
 
     private suspend fun generateConfig(repository: InMemoryAnalyzerConfigRepository) {
@@ -146,10 +154,19 @@ class MessageAnalysisViewModelTest {
                 ProcessingUpdate.Completed(
                     processedRows = totalRowsHint,
                     outputCsvPath = "/tmp/full_msg_analyzed.csv",
-                    logPath = "/tmp/full_msg_processing.log",
+                    logPath = "/tmp/full_msg_processing.log".takeIf { request.debugMode },
                     summary = AnalysisSummaryAccumulator().build(),
                 ),
             )
         }
+    }
+
+    private class FakeSettingsRepository(debugMode: Boolean) : SettingsRepository {
+        override val themeMode: StateFlow<ThemeMode> = MutableStateFlow(ThemeMode.System)
+        override val debugMode: StateFlow<Boolean> = MutableStateFlow(debugMode)
+
+        override fun setThemeMode(mode: ThemeMode) = Unit
+
+        override fun setDebugMode(enabled: Boolean) = Unit
     }
 }

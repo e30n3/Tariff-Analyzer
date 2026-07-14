@@ -9,9 +9,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
 import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.composables.DebugModeItem
 import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.composables.ThemeModeItem
 import org.jetbrains.compose.resources.stringResource
 import tariff_analyzer.sharedui.generated.resources.Res
+import tariff_analyzer.sharedui.generated.resources.debug_mode_description
+import tariff_analyzer.sharedui.generated.resources.debug_mode_title
+import tariff_analyzer.sharedui.generated.resources.debug_section_description
+import tariff_analyzer.sharedui.generated.resources.debug_section_title
 import tariff_analyzer.sharedui.generated.resources.theme_dark
 import tariff_analyzer.sharedui.generated.resources.theme_light
 import tariff_analyzer.sharedui.generated.resources.theme_section_description
@@ -50,6 +55,18 @@ fun SettingsScreenContent(
             selected = state.selectedThemeMode == ThemeMode.Light,
             onClick = {
                 onAction(SettingsContract.Action.SelectThemeMode(ThemeMode.Light))
+            },
+        )
+        AnalyzerSectionHeader(
+            title = stringResource(Res.string.debug_section_title),
+            description = stringResource(Res.string.debug_section_description),
+        )
+        DebugModeItem(
+            title = stringResource(Res.string.debug_mode_title),
+            description = stringResource(Res.string.debug_mode_description),
+            enabled = state.isDebugModeEnabled,
+            onEnabledChange = {
+                onAction(SettingsContract.Action.SetDebugMode(it))
             },
         )
     }

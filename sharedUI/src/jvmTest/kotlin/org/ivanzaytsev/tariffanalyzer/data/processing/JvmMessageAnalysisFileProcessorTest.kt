@@ -18,12 +18,14 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class JvmMessageAnalysisFileProcessorTest {
 
     @Test
-    fun writesAnalyzedCsvAndProcessingLog() = runTest {
+    fun debugModeWritesAnalyzedCsvUtf8CopyAndProcessingLog() = runTest {
         val tempDir = Files.createTempDirectory("tariff-analyzer-test").toFile()
         val previousAppDir = System.getProperty("compose.application.dir")
         System.setProperty("compose.application.dir", tempDir.absolutePath)
@@ -46,6 +48,7 @@ class JvmMessageAnalysisFileProcessorTest {
                             sizeBytes = input.length(),
                             purpose = AnalyzerFilePurpose.Messages,
                         ),
+                        debugMode = true,
                     ),
                     config = config(),
                 )
@@ -68,6 +71,53 @@ class JvmMessageAnalysisFileProcessorTest {
             assertTrue(output.lines().first().contains(AnalyzerOutputColumns.PROCESSING_ERRORS))
             assertTrue(output.contains(";4.43;Сервисный;1.90;да;определен;без конфликта;"))
             assertTrue(log.contains("Tariff Analyzer processing log"))
+        } finally {
+            if (previousAppDir == null) {
+                System.clearProperty("compose.application.dir")
+            } else {
+                System.setProperty("compose.application.dir", previousAppDir)
+            }
+            tempDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun defaultModeWritesOnlyWindows1251Csv() = runTest {
+        val tempDir = Files.createTempDirectory("tariff-analyzer-test").toFile()
+        val previousAppDir = System.getProperty("compose.application.dir")
+        System.setProperty("compose.application.dir", tempDir.absolutePath)
+        try {
+            val input = File(tempDir, "messages.csv")
+            input.writeText(
+                """
+                Наименование учётной записи;Имя отправителя;Текст SMS;Тип трафика;Оператор/направление
+                0;OTP Bank;Код: 1234!;Рекламный;t2
+                """.trimIndent(),
+                WINDOWS_1251,
+            )
+
+            val completed = createMessageAnalysisFileProcessor()
+                .process(
+                    request = ProcessMessagesRequest(
+                        messagesFile = AnalyzerFileReference(
+                            name = input.name,
+                            path = input.absolutePath,
+                            sizeBytes = input.length(),
+                            purpose = AnalyzerFilePurpose.Messages,
+                        ),
+                    ),
+                    config = config(),
+                )
+                .toList()
+                .filterIsInstance<ProcessingUpdate.Completed>()
+                .single()
+
+            val generatedFiles = tempDir.listFiles().orEmpty().filterNot { it == input }
+            assertNull(completed.logPath)
+            assertEquals(1, generatedFiles.size)
+            assertEquals(File(completed.outputCsvPath), generatedFiles.single())
+            assertFalse(generatedFiles.any { it.name.contains("_utf8") || it.extension == "log" })
+            assertTrue(File(completed.outputCsvPath).readText(WINDOWS_1251).contains("Сервисный"))
         } finally {
             if (previousAppDir == null) {
                 System.clearProperty("compose.application.dir")

@@ -13,10 +13,17 @@ class MultiplatformSettingsRepository(
 
     private val _themeMode = MutableStateFlow(readThemeMode())
     override val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+    private val _debugMode = MutableStateFlow(settings.getBoolean(KEY_DEBUG_MODE, false))
+    override val debugMode: StateFlow<Boolean> = _debugMode.asStateFlow()
 
     override fun setThemeMode(mode: ThemeMode) {
         settings.putString(KEY_THEME_MODE, mode.name)
         _themeMode.value = mode
+    }
+
+    override fun setDebugMode(enabled: Boolean) {
+        settings.putBoolean(KEY_DEBUG_MODE, enabled)
+        _debugMode.value = enabled
     }
 
     private fun readThemeMode(): ThemeMode {
@@ -26,5 +33,6 @@ class MultiplatformSettingsRepository(
 
     private companion object {
         const val KEY_THEME_MODE = "theme_mode"
+        const val KEY_DEBUG_MODE = "debug_mode"
     }
 }

@@ -11,7 +11,10 @@ import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.SettingsContr
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
 ) : BaseViewModel<State, Action, Effect>(
-    initialState = State(selectedThemeMode = settingsRepository.themeMode.value),
+    initialState = State(
+        selectedThemeMode = settingsRepository.themeMode.value,
+        isDebugModeEnabled = settingsRepository.debugMode.value,
+    ),
     loggerTag = "SettingsViewModel",
 ) {
 
@@ -21,11 +24,17 @@ class SettingsViewModel(
                 setState { it.copy(selectedThemeMode = mode) }
             }
         }
+        viewModelScope.launch {
+            settingsRepository.debugMode.collect { enabled ->
+                setState { it.copy(isDebugModeEnabled = enabled) }
+            }
+        }
     }
 
     override fun reduce(action: Action) {
         when (action) {
             is Action.SelectThemeMode -> settingsRepository.setThemeMode(action.mode)
+            is Action.SetDebugMode -> settingsRepository.setDebugMode(action.enabled)
         }
     }
 }

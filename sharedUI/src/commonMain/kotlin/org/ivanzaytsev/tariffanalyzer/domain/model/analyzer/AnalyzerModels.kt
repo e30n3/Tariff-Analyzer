@@ -44,6 +44,7 @@ data class GeneratedConfigResult(
 
 data class ProcessMessagesRequest(
     val messagesFile: AnalyzerFileReference,
+    val debugMode: Boolean = false,
 )
 
 sealed interface ProcessingUpdate {
@@ -56,7 +57,7 @@ sealed interface ProcessingUpdate {
     data class Completed(
         val processedRows: Long,
         val outputCsvPath: String,
-        val logPath: String,
+        val logPath: String?,
         val summary: AnalysisSummary,
     ) : ProcessingUpdate
 }

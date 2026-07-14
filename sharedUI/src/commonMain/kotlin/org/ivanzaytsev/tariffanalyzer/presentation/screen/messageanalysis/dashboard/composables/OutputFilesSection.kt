@@ -13,9 +13,15 @@ fun OutputFilesSection(
     DashboardSection {
         AnalyzerSectionHeader(
             title = "Файлы результата",
-            description = "CSV сохранён в исходной кодировке и отдельной UTF-8 копии; лог содержит диагностику строк.",
+            description = if (logPath == null) {
+                "CSV сохранён в кодировке Windows-1251. Дополнительные debug-файлы отключены."
+            } else {
+                "CSV сохранён в Windows-1251 и UTF-8; лог содержит диагностику строк."
+            },
         )
         ResultRow(label = "CSV", value = outputCsvPath ?: "Путь недоступен")
-        ResultRow(label = "Лог", value = logPath ?: "Путь недоступен")
+        if (logPath != null) {
+            ResultRow(label = "Лог", value = logPath)
+        }
     }
 }

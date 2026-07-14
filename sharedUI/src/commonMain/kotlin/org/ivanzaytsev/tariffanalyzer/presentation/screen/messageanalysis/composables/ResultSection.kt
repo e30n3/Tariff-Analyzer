@@ -19,10 +19,12 @@ fun ResultSection(state: MessageAnalysisContract.State) {
             label = "CSV",
             value = state.outputCsvPath ?: "Пока не создан",
         )
-        ResultRow(
-            label = "Лог",
-            value = state.logPath ?: "Пока не создан",
-        )
+        if (state.logPath != null) {
+            ResultRow(
+                label = "Лог",
+                value = state.logPath,
+            )
+        }
         if (state.error != null) {
             Text(
                 text = state.error,

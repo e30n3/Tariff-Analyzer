@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ConfigStatus
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessMessagesRequest
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.ProcessingUpdate
+import org.ivanzaytsev.tariffanalyzer.domain.repository.SettingsRepository
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.LoadConfigStatusUseCase
 import org.ivanzaytsev.tariffanalyzer.domain.usecase.ProcessMessagesUseCase
 import org.ivanzaytsev.tariffanalyzer.presentation.base.BaseViewModel
@@ -19,6 +20,7 @@ import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.Messag
 class MessageAnalysisViewModel(
     private val loadConfigStatusUseCase: LoadConfigStatusUseCase,
     private val processMessagesUseCase: ProcessMessagesUseCase,
+    private val settingsRepository: SettingsRepository,
 ) : BaseViewModel<State, Action, Effect>(
     initialState = State(),
     loggerTag = "MessageAnalysisViewModel",
@@ -58,7 +60,11 @@ class MessageAnalysisViewModel(
                     }
                 }
                 .onFailure { throwable ->
-                    handleFailure(throwable, "Не удалось загрузить статус конфигурации")
+                    handleFailure(
+                        throwable = throwable,
+                        fallbackMessage = "Не удалось загрузить статус конфигурации",
+                        logOperation = "Loading configuration status",
+                    )
                 }
         }
     }
@@ -89,7 +95,12 @@ class MessageAnalysisViewModel(
         }
         processingJob = viewModelScope.launch {
             runCatching {
-                processMessagesUseCase(ProcessMessagesRequest(messagesFile)).collectLatest { update ->
+                processMessagesUseCase(
+                    ProcessMessagesRequest(
+                        messagesFile = messagesFile,
+                        debugMode = settingsRepository.debugMode.value,
+                    ),
+                ).collectLatest { update ->
                     when (update) {
                         is ProcessingUpdate.Progress -> setState {
                             it.copy(
@@ -114,7 +125,11 @@ class MessageAnalysisViewModel(
                 }
             }.onFailure { throwable ->
                 if (throwable !is CancellationException) {
-                    handleFailure(throwable, "Не удалось обработать файл сообщений")
+                    handleFailure(
+                        throwable = throwable,
+                        fallbackMessage = "Не удалось обработать файл сообщений",
+                        logOperation = "Processing message file",
+                    )
                 }
             }
         }
@@ -150,9 +165,13 @@ class MessageAnalysisViewModel(
         }
     }
 
-    private fun handleFailure(throwable: Throwable, fallbackMessage: String) {
+    private fun handleFailure(
+        throwable: Throwable,
+        fallbackMessage: String,
+        logOperation: String,
+    ) {
         val message = throwable.message ?: fallbackMessage
-        logError(throwable, message)
+        logError(throwable, logOperation)
         setState {
             it.copy(
                 isLoadingConfigStatus = false,

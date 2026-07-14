@@ -42,8 +42,12 @@ private class JvmMessageAnalysisFileProcessor(
 
         val outputFiles = createOutputFiles(request.messagesFile.name)
         val tempCsv = File(outputFiles.outputCsvPath + PARTIAL_SUFFIX)
-        val tempUtf8Csv = File(outputFiles.outputUtf8CsvPath + PARTIAL_SUFFIX)
-        val tempLog = File(outputFiles.logPath + PARTIAL_SUFFIX)
+        val tempUtf8Csv = outputFiles.outputUtf8CsvPath
+            .takeIf { request.debugMode }
+            ?.let { File(it + PARTIAL_SUFFIX) }
+        val tempLog = outputFiles.logPath
+            .takeIf { request.debugMode }
+            ?.let { File(it + PARTIAL_SUFFIX) }
         var processedRows = 0L
         var processedBytes = 0L
         val summaryAccumulator = AnalysisSummaryAccumulator()
@@ -52,79 +56,89 @@ private class JvmMessageAnalysisFileProcessor(
             val analyzer = MessageAnalyzer(config)
             CsvRecordReader(inputFile, WINDOWS_1251).use { reader ->
                 BufferedWriter(OutputStreamWriter(FileOutputStream(tempCsv), WINDOWS_1251)).use { csvWriter ->
-                    BufferedWriter(OutputStreamWriter(FileOutputStream(tempUtf8Csv), Charsets.UTF_8)).use { utf8CsvWriter ->
-                        BufferedWriter(OutputStreamWriter(FileOutputStream(tempLog), Charsets.UTF_8)).use { logWriter ->
-                            logWriter.write("Tariff Analyzer processing log")
-                            logWriter.newLine()
-                            logWriter.write("input=${inputFile.absolutePath}")
-                            logWriter.newLine()
+                    DebugOutputWriters.open(tempUtf8Csv, tempLog).use { debugWriters ->
+                        debugWriters?.logWriter?.run {
+                            write("Tariff Analyzer processing log")
+                            newLine()
+                            write("input=${inputFile.absolutePath}")
+                            newLine()
+                        }
 
-                            val headerRecord = reader.readRecord()
-                                ?: error("CSV-файл сообщений пуст.")
-                            processedBytes += headerRecord.byteSizeForProgress()
-                            val header = parseSingleRecord(headerRecord)
-                            validateRequiredColumns(header)
-                            writeCsvRecord(csvWriter, header + AnalyzerOutputColumns.all)
-                            writeCsvRecord(utf8CsvWriter, header + AnalyzerOutputColumns.all)
+                        val headerRecord = reader.readRecord()
+                            ?: error("CSV-файл сообщений пуст.")
+                        processedBytes += headerRecord.byteSizeForProgress()
+                        val header = parseSingleRecord(headerRecord)
+                        validateRequiredColumns(header)
+                        writeCsvRecord(csvWriter, header + AnalyzerOutputColumns.all)
+                        debugWriters?.utf8CsvWriter?.let {
+                            writeCsvRecord(it, header + AnalyzerOutputColumns.all)
+                        }
 
-                            var record = reader.readRecord()
-                            while (record != null) {
-                                currentCoroutineContext().ensureActive()
-                                processedBytes += record.byteSizeForProgress()
-                                processedRows++
+                        var record = reader.readRecord()
+                        while (record != null) {
+                            currentCoroutineContext().ensureActive()
+                            processedBytes += record.byteSizeForProgress()
+                            processedRows++
 
-                                val values = parseSingleRecord(record)
-                                val valuesByColumn = header.mapIndexed { index, column ->
-                                    column to values.getOrElse(index) { "" }
-                                }.toMap()
-                                val analysis = analyzer.analyze(
-                                    MessageCsvRow(
-                                        csvLineNumber = processedRows + 1L,
-                                        valuesByColumn = valuesByColumn,
-                                    ),
-                                )
-                                summaryAccumulator.add(analysis)
+                            val values = parseSingleRecord(record)
+                            val valuesByColumn = header.mapIndexed { index, column ->
+                                column to values.getOrElse(index) { "" }
+                            }.toMap()
+                            val analysis = analyzer.analyze(
+                                MessageCsvRow(
+                                    csvLineNumber = processedRows + 1L,
+                                    valuesByColumn = valuesByColumn,
+                                ),
+                            )
+                            summaryAccumulator.add(analysis)
 
-                                val outputValues = values + analysis.additionalValues
-                                //writeCsvRecord(csvWriter, outputValues)
-                                writeCsvRecord(utf8CsvWriter, outputValues)
+                            val outputValues = values + analysis.additionalValues
+                            writeCsvRecord(csvWriter, outputValues)
+                            debugWriters?.utf8CsvWriter?.let {
+                                writeCsvRecord(it, outputValues)
+                            }
+                            debugWriters?.logWriter?.let { logWriter ->
                                 analysis.logEntries.forEach { entry ->
                                     logWriter.write(entry)
                                     logWriter.newLine()
                                 }
-
-                                if (processedRows % PROGRESS_STEP == 0L) {
-                                    emit(
-                                        ProcessingUpdate.Progress(
-                                            processedRows = processedRows,
-                                            totalRowsHint = null,
-                                            progressFraction = progressFraction(processedBytes, inputFile.length()),
-                                        ),
-                                    )
-                                }
-
-                                record = reader.readRecord()
                             }
+
+                            if (processedRows % PROGRESS_STEP == 0L) {
+                                emit(
+                                    ProcessingUpdate.Progress(
+                                        processedRows = processedRows,
+                                        totalRowsHint = null,
+                                        progressFraction = progressFraction(processedBytes, inputFile.length()),
+                                    ),
+                                )
+                            }
+
+                            record = reader.readRecord()
                         }
                     }
                 }
             }
 
             renameTempFile(tempCsv, File(outputFiles.outputCsvPath))
-            renameTempFile(tempUtf8Csv, File(outputFiles.outputUtf8CsvPath))
-            renameTempFile(tempLog, File(outputFiles.logPath))
+            tempUtf8Csv?.let {
+                renameTempFile(it, File(outputFiles.outputUtf8CsvPath))
+            }
+            tempLog?.let {
+                renameTempFile(it, File(outputFiles.logPath))
+            }
             emit(
                 ProcessingUpdate.Completed(
                     processedRows = processedRows,
                     outputCsvPath = outputFiles.outputCsvPath,
-                    logPath = outputFiles.logPath,
+                    logPath = outputFiles.logPath.takeIf { request.debugMode },
                     summary = summaryAccumulator.build(),
                 ),
             )
         } catch (throwable: Throwable) {
             tempCsv.delete()
-            tempUtf8Csv.delete()
-            tempLog.delete()
+            tempUtf8Csv?.delete()
+            tempLog?.delete()
             throw throwable
         }
     }.flowOn(Dispatchers.IO)
@@ -210,6 +224,43 @@ private class CsvRecordReader(
 
     override fun close() {
         reader.close()
+    }
+}
+
+private class DebugOutputWriters private constructor(
+    val utf8CsvWriter: BufferedWriter,
+    val logWriter: BufferedWriter,
+) : Closeable {
+
+    override fun close() {
+        var failure: Throwable? = null
+        runCatching { logWriter.close() }
+            .onFailure { failure = it }
+        runCatching { utf8CsvWriter.close() }
+            .onFailure { throwable ->
+                failure?.addSuppressed(throwable) ?: run { failure = throwable }
+            }
+        failure?.let { throw it }
+    }
+
+    companion object {
+        fun open(
+            utf8File: File?,
+            logFile: File?,
+        ): DebugOutputWriters? {
+            if (utf8File == null || logFile == null) return null
+
+            val utf8Writer = BufferedWriter(OutputStreamWriter(FileOutputStream(utf8File), Charsets.UTF_8))
+            return try {
+                DebugOutputWriters(
+                    utf8CsvWriter = utf8Writer,
+                    logWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(logFile), Charsets.UTF_8)),
+                )
+            } catch (throwable: Throwable) {
+                utf8Writer.close()
+                throw throwable
+            }
+        }
     }
 }
 

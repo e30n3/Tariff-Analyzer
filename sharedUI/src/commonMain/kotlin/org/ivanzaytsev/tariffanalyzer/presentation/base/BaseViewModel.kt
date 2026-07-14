@@ -43,7 +43,10 @@ abstract class BaseViewModel<State : Any, Action : Any, Effect : Any>(
         }
     }
 
-    protected fun logError(throwable: Throwable, message: String) {
-        logger.e(throwable = throwable) { message }
+    protected fun logError(throwable: Throwable, operation: String) {
+        val stackFrames = throwable.stackTrace.joinToString(separator = "\n") { "\tat $it" }
+        logger.e {
+            "$operation failed with ${throwable::class.simpleName}\n$stackFrames"
+        }
     }
 }
