@@ -5,7 +5,7 @@
     <string name="stop">Stop</string>
     <string name="theme">Theme</string>
     <string name="tariffs_title">Tariffs</string>
-    <string name="settings_title">Settings</string>
+    <string name="settings_title">Настройки</string>
     <string name="back">Back</string>
     <string name="retry">Retry</string>
     <string name="refresh">Refresh</string>
@@ -16,13 +16,13 @@
     <string name="pick_file_hint">Drop a file here or click to choose</string>
     <string name="file_selected">Selected</string>
     <string name="empty_file">(empty file)</string>
-    <string name="theme_section_title">Theme mode</string>
-    <string name="theme_section_description">The selected mode is saved locally and applied on the next launch.</string>
-    <string name="theme_system">System</string>
-    <string name="theme_dark">Dark</string>
-    <string name="theme_light">Light</string>
-    <string name="debug_section_title">Diagnostics</string>
-    <string name="debug_section_description">Debug output is saved locally. Console visibility changes on the next application launch.</string>
-    <string name="debug_mode_title">Debug mode</string>
-    <string name="debug_mode_description">Create an additional UTF-8 CSV and processing log, and show the console at startup.</string>
+    <string name="theme_section_title">Тема оформления</string>
+    <string name="theme_section_description">Выбранная тема сохраняется локально и применяется при следующем запуске.</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_dark">Темная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="debug_section_title">Диагностика</string>
+    <string name="debug_section_description">Отладочные данные сохраняются локально. Отображение консоли изменится при следующем запуске приложения.</string>
+    <string name="debug_mode_title">Режим отладки</string>
+    <string name="debug_mode_description">Создавать дополнительный CSV-файл в кодировке UTF-8 и журнал обработки, а также показывать консоль при запуске.</string>
 </resources>
