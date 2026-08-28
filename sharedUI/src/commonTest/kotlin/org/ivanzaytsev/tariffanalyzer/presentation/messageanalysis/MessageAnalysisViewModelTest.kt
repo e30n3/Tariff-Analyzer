@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -119,6 +120,37 @@ class MessageAnalysisViewModelTest {
         advanceUntilIdle()
 
         assertEquals(true, viewModel.state.value.isDashboardEnabled)
+    }
+
+    @Test
+    fun completedResultCanBeRevealedInFileManager() = runTest(dispatcher) {
+        val repository = InMemoryAnalyzerConfigRepository()
+        generateConfig(repository)
+        val viewModel = createViewModel(repository)
+        advanceUntilIdle()
+        viewModel.onAction(MessageAnalysisContract.Action.ChooseMessagesCsv(file("full_msg.csv", AnalyzerFilePurpose.Messages)))
+        viewModel.onAction(MessageAnalysisContract.Action.StartProcessing)
+        advanceUntilIdle()
+
+        viewModel.onAction(MessageAnalysisContract.Action.OpenOutputFolder)
+
+        assertEquals(
+            MessageAnalysisContract.Effect.RevealOutputFile("/tmp/full_msg_analyzed.csv"),
+            viewModel.effect.first(),
+        )
+    }
+
+    @Test
+    fun openingFolderBeforeResultShowsMessage() = runTest(dispatcher) {
+        val viewModel = createViewModel(InMemoryAnalyzerConfigRepository())
+        advanceUntilIdle()
+
+        viewModel.onAction(MessageAnalysisContract.Action.OpenOutputFolder)
+
+        assertEquals(
+            MessageAnalysisContract.Effect.ShowMessage("Итоговый CSV ещё не создан"),
+            viewModel.effect.first(),
+        )
     }
 
     private fun createViewModel(

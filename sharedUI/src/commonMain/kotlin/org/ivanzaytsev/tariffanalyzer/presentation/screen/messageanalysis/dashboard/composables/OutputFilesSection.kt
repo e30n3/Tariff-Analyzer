@@ -2,6 +2,7 @@ package org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.dashb
 
 import androidx.compose.runtime.Composable
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.composables.RevealResultFileButton
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.DashboardSection
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.ResultRow
 
@@ -9,6 +10,7 @@ import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.ResultRow
 fun OutputFilesSection(
     outputCsvPath: String?,
     logPath: String?,
+    onOpenOutputFolder: () -> Unit,
 ) {
     DashboardSection {
         AnalyzerSectionHeader(
@@ -22,6 +24,9 @@ fun OutputFilesSection(
         ResultRow(label = "CSV", value = outputCsvPath ?: "Путь недоступен")
         if (logPath != null) {
             ResultRow(label = "Лог", value = logPath)
+        }
+        if (outputCsvPath != null) {
+            RevealResultFileButton(onClick = onOpenOutputFolder)
         }
     }
 }

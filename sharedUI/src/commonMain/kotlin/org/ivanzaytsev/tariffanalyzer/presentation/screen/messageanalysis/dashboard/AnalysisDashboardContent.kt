@@ -17,6 +17,7 @@ fun AnalysisDashboardContent(
     state: MessageAnalysisContract.State,
     snackbarHostState: SnackbarHostState,
     onStartNewAnalysis: () -> Unit,
+    onOpenOutputFolder: () -> Unit,
 ) {
     val summary = requireNotNull(state.summary)
     AnalyzerContentScaffold(snackbarHostState) {
@@ -32,6 +33,12 @@ fun AnalysisDashboardContent(
         item { IssuesOverview(summary) }
         item { TypeTransitionsSection(summary.trafficTypeTransitions) }
         item { OperatorBreakdownSection(summary.operatorSummaries) }
-        item { OutputFilesSection(state.outputCsvPath, state.logPath) }
+        item {
+            OutputFilesSection(
+                outputCsvPath = state.outputCsvPath,
+                logPath = state.logPath,
+                onOpenOutputFolder = onOpenOutputFolder,
+            )
+        }
     }
 }

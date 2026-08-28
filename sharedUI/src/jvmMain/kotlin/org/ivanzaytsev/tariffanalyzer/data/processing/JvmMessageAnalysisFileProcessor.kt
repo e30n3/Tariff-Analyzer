@@ -26,6 +26,7 @@ import java.io.OutputStreamWriter
 import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.ceil
 
 actual fun createMessageAnalysisFileProcessor(): MessageAnalysisFileProcessor = JvmMessageAnalysisFileProcessor()
 
@@ -50,6 +51,7 @@ private class JvmMessageAnalysisFileProcessor(
             ?.let { File(it + PARTIAL_SUFFIX) }
         var processedRows = 0L
         var processedBytes = 0L
+        var processedDataBytes = 0L
         val summaryAccumulator = AnalysisSummaryAccumulator()
 
         try {
@@ -66,8 +68,9 @@ private class JvmMessageAnalysisFileProcessor(
 
                         val headerRecord = reader.readRecord()
                             ?: error("CSV-файл сообщений пуст.")
-                        processedBytes += headerRecord.byteSizeForProgress()
-                        val header = parseSingleRecord(headerRecord)
+                        processedBytes += headerRecord.byteSize
+                        val totalDataBytes = (inputFile.length() - headerRecord.byteSize).coerceAtLeast(0L)
+                        val header = parseSingleRecord(headerRecord.value)
                         validateRequiredColumns(header)
                         writeCsvRecord(csvWriter, header + AnalyzerOutputColumns.all)
                         debugWriters?.utf8CsvWriter?.let {
@@ -77,10 +80,11 @@ private class JvmMessageAnalysisFileProcessor(
                         var record = reader.readRecord()
                         while (record != null) {
                             currentCoroutineContext().ensureActive()
-                            processedBytes += record.byteSizeForProgress()
+                            processedBytes += record.byteSize
+                            processedDataBytes += record.byteSize
                             processedRows++
 
-                            val values = parseSingleRecord(record)
+                            val values = parseSingleRecord(record.value)
                             val valuesByColumn = header.mapIndexed { index, column ->
                                 column to values.getOrElse(index) { "" }
                             }.toMap()
@@ -108,7 +112,11 @@ private class JvmMessageAnalysisFileProcessor(
                                 emit(
                                     ProcessingUpdate.Progress(
                                         processedRows = processedRows,
-                                        totalRowsHint = null,
+                                        totalRowsHint = estimateTotalRows(
+                                            processedRows = processedRows,
+                                            processedDataBytes = processedDataBytes,
+                                            totalDataBytes = totalDataBytes,
+                                        ),
                                         progressFraction = progressFraction(processedBytes, inputFile.length()),
                                     ),
                                 )
@@ -178,24 +186,26 @@ private class CsvRecordReader(
 ) : Closeable {
     private val reader = BufferedReader(InputStreamReader(FileInputStream(file), charset))
 
-    fun readRecord(): String? {
+    fun readRecord(): CsvRecord? {
         val record = StringBuilder()
         var inQuotes = false
         var hasContent = false
+        var byteSize = 0L
 
         while (true) {
             val value = reader.read()
             if (value < 0) {
-                return if (hasContent) record.toString() else null
+                return if (hasContent) CsvRecord(record.toString(), byteSize) else null
             }
 
             hasContent = true
-            val char = value.toChar()
-            when {
-                char == '"' -> {
+            byteSize++
+            when (val char = value.toChar()) {
+                '"' -> {
                     reader.mark(1)
                     val next = reader.read()
                     if (inQuotes && next == '"'.code) {
+                        byteSize++
                         record.append("\"\"")
                     } else {
                         if (next >= 0) {
@@ -205,18 +215,17 @@ private class CsvRecordReader(
                         record.append(char)
                     }
                 }
-
-                char == '\n' && !inQuotes -> return record.toString()
-
-                char == '\r' && !inQuotes -> {
+                '\n' if !inQuotes -> return CsvRecord(record.toString(), byteSize)
+                '\r' if !inQuotes -> {
                     reader.mark(1)
                     val next = reader.read()
-                    if (next != '\n'.code && next >= 0) {
+                    if (next == '\n'.code) {
+                        byteSize++
+                    } else if (next >= 0) {
                         reader.reset()
                     }
-                    return record.toString()
+                    return CsvRecord(record.toString(), byteSize)
                 }
-
                 else -> record.append(char)
             }
         }
@@ -226,6 +235,11 @@ private class CsvRecordReader(
         reader.close()
     }
 }
+
+private data class CsvRecord(
+    val value: String,
+    val byteSize: Long,
+)
 
 private class DebugOutputWriters private constructor(
     val utf8CsvWriter: BufferedWriter,
@@ -278,14 +292,24 @@ private fun String.escapeCsvValue(): String {
     }
 }
 
-private fun String.byteSizeForProgress(): Long = toByteArray(WINDOWS_1251).size + 1L
-
 private fun progressFraction(processedBytes: Long, totalBytes: Long): Float =
     if (totalBytes <= 0L) {
         0f
     } else {
         (processedBytes.toDouble() / totalBytes.toDouble()).toFloat().coerceIn(0f, 1f)
     }
+
+private fun estimateTotalRows(
+    processedRows: Long,
+    processedDataBytes: Long,
+    totalDataBytes: Long,
+): Long? = if (processedRows <= 0L || processedDataBytes <= 0L || totalDataBytes <= 0L) {
+    null
+} else {
+    ceil(processedRows.toDouble() * totalDataBytes.toDouble() / processedDataBytes.toDouble())
+        .toLong()
+        .coerceAtLeast(processedRows)
+}
 
 private fun renameTempFile(tempFile: File, targetFile: File) {
     if (!tempFile.renameTo(targetFile)) {

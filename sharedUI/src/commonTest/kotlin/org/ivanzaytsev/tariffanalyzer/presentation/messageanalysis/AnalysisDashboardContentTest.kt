@@ -3,9 +3,11 @@ package org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.runComposeUiTest
 import org.ivanzaytsev.tariffanalyzer.designsystem.theme.TariffAnalyzerTheme
 import org.ivanzaytsev.tariffanalyzer.domain.model.analyzer.AnalysisSummary
@@ -40,6 +42,10 @@ class AnalysisDashboardContentTest {
         onNodeWithText("Расчёт оператора").fetchSemanticsNode()
         onNodeWithText("Правильная стоимость").fetchSemanticsNode()
         onNodeWithText("Разница").fetchSemanticsNode()
+        onNode(hasScrollToIndexAction()).performScrollToIndex(6)
+        onNodeWithText("Показать в папке").performClick()
+        assertEquals(MessageAnalysisContract.Action.OpenOutputFolder, receivedAction)
+        onNode(hasScrollToIndexAction()).performScrollToIndex(0)
         onNodeWithText("Новый анализ").performClick()
 
         assertEquals(MessageAnalysisContract.Action.StartNewAnalysis, receivedAction)
@@ -47,13 +53,14 @@ class AnalysisDashboardContentTest {
 
     @Test
     fun completedStateShowsRegularResultWhenDashboardIsDisabled() = runComposeUiTest {
+        var receivedAction: MessageAnalysisContract.Action? = null
         setContent {
             val snackbarHostState = remember { SnackbarHostState() }
             TariffAnalyzerTheme(isDark = false) {
                 MessageAnalysisScreenContent(
                     state = completedState().copy(isDashboardEnabled = false),
                     snackbarHostState = snackbarHostState,
-                    onAction = {},
+                    onAction = { receivedAction = it },
                 )
             }
         }
@@ -61,6 +68,8 @@ class AnalysisDashboardContentTest {
         assertTrue(onAllNodesWithText("Расчёт оператора").fetchSemanticsNodes().isEmpty())
         onNodeWithText("Результат").fetchSemanticsNode()
         onNodeWithText("/tmp/messages_analyzed.csv").fetchSemanticsNode()
+        onNodeWithText("Показать в папке").performClick()
+        assertEquals(MessageAnalysisContract.Action.OpenOutputFolder, receivedAction)
     }
 
     private fun completedState(): MessageAnalysisContract.State = MessageAnalysisContract.State(

@@ -42,9 +42,11 @@ interface MessageAnalysisContract {
         data object StartProcessing : Action
         data object CancelProcessing : Action
         data object StartNewAnalysis : Action
+        data object OpenOutputFolder : Action
     }
 
     sealed interface Effect {
         data class ShowMessage(val message: String) : Effect
+        data class RevealOutputFile(val path: String) : Effect
     }
 }

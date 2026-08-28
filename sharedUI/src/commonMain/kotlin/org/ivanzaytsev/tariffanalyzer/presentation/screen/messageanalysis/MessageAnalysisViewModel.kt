@@ -47,7 +47,17 @@ class MessageAnalysisViewModel(
             Action.StartProcessing -> startProcessing()
             Action.CancelProcessing -> cancelProcessing()
             Action.StartNewAnalysis -> startNewAnalysis()
+            Action.OpenOutputFolder -> openOutputFolder()
         }
+    }
+
+    private fun openOutputFolder() {
+        val outputCsvPath = state.value.outputCsvPath
+        if (outputCsvPath == null) {
+            sendEffect(Effect.ShowMessage("Итоговый CSV ещё не создан"))
+            return
+        }
+        sendEffect(Effect.RevealOutputFile(outputCsvPath))
     }
 
     private fun loadConfigStatus() {

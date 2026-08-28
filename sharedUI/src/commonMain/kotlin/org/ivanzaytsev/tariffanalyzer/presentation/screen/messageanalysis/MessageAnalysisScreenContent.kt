@@ -25,6 +25,7 @@ fun MessageAnalysisScreenContent(
             state = state,
             snackbarHostState = snackbarHostState,
             onStartNewAnalysis = { onAction(Action.StartNewAnalysis) },
+            onOpenOutputFolder = { onAction(Action.OpenOutputFolder) },
         )
         return
     }
@@ -39,7 +40,10 @@ fun MessageAnalysisScreenContent(
             )
         }
         item {
-            ResultSection(state)
+            ResultSection(
+                state = state,
+                onOpenOutputFolder = { onAction(Action.OpenOutputFolder) },
+            )
         }
         item {
             ValidationIssuesSection(state.validationIssues)

@@ -9,7 +9,10 @@ import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.DashboardSe
 import org.ivanzaytsev.tariffanalyzer.presentation.sharedComposables.ResultRow
 
 @Composable
-fun ResultSection(state: MessageAnalysisContract.State) {
+fun ResultSection(
+    state: MessageAnalysisContract.State,
+    onOpenOutputFolder: () -> Unit,
+) {
     DashboardSection {
         AnalyzerSectionHeader(
             title = "Результат",
@@ -24,6 +27,9 @@ fun ResultSection(state: MessageAnalysisContract.State) {
                 label = "Лог",
                 value = state.logPath,
             )
+        }
+        if (state.outputCsvPath != null) {
+            RevealResultFileButton(onClick = onOpenOutputFolder)
         }
         if (state.error != null) {
             Text(

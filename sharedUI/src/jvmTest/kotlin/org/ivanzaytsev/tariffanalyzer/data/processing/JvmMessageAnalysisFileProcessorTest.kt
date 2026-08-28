@@ -19,10 +19,54 @@ import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class JvmMessageAnalysisFileProcessorTest {
+
+    @Test
+    fun progressIncludesEstimatedTotalRowsWithoutSecondPass() = runTest {
+        val tempDir = Files.createTempDirectory("tariff-analyzer-progress-test").toFile()
+        val previousAppDir = System.getProperty("compose.application.dir")
+        System.setProperty("compose.application.dir", tempDir.absolutePath)
+        try {
+            val input = File(tempDir, "large_messages.csv")
+            val rows = (1..1_500).joinToString("\n") { index ->
+                val message = if (index == 1) "\"Код:\n1234!\"" else "Код: 1234!"
+                "$index;OTP Bank;$message;Рекламный;t2"
+            }
+            input.writeText("$HEADER\n$rows", WINDOWS_1251)
+
+            val updates = createMessageAnalysisFileProcessor()
+                .process(
+                    request = ProcessMessagesRequest(
+                        messagesFile = AnalyzerFileReference(
+                            name = input.name,
+                            path = input.absolutePath,
+                            sizeBytes = input.length(),
+                            purpose = AnalyzerFilePurpose.Messages,
+                        ),
+                    ),
+                    config = config(),
+                )
+                .toList()
+
+            val progress = updates.filterIsInstance<ProcessingUpdate.Progress>().single()
+            val totalRowsHint = assertNotNull(progress.totalRowsHint)
+            val completed = updates.filterIsInstance<ProcessingUpdate.Completed>().single()
+
+            assertTrue(totalRowsHint >= progress.processedRows)
+            assertEquals(1_500L, completed.processedRows)
+        } finally {
+            if (previousAppDir == null) {
+                System.clearProperty("compose.application.dir")
+            } else {
+                System.setProperty("compose.application.dir", previousAppDir)
+            }
+            tempDir.deleteRecursively()
+        }
+    }
 
     @Test
     fun debugModeWritesAnalyzedCsvUtf8CopyAndProcessingLog() = runTest {
@@ -164,5 +208,7 @@ class JvmMessageAnalysisFileProcessorTest {
 
     private companion object {
         val WINDOWS_1251: Charset = Charset.forName("windows-1251")
+        const val HEADER =
+            "Наименование учётной записи;Имя отправителя;Текст SMS;Тип трафика;Оператор/направление"
     }
 }
