@@ -4,15 +4,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.ivanzaytsev.tariffanalyzer.designsystem.components.AnalyzerSectionHeader
 import org.ivanzaytsev.tariffanalyzer.domain.model.ThemeMode
-import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.composables.DebugModeItem
 import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.composables.ThemeModeItem
+import org.ivanzaytsev.tariffanalyzer.presentation.screen.settings.composables.ToggleSettingItem
 import org.jetbrains.compose.resources.stringResource
 import tariff_analyzer.sharedui.generated.resources.Res
+import tariff_analyzer.sharedui.generated.resources.dashboard_mode_description
+import tariff_analyzer.sharedui.generated.resources.dashboard_mode_title
+import tariff_analyzer.sharedui.generated.resources.dashboard_section_description
+import tariff_analyzer.sharedui.generated.resources.dashboard_section_title
 import tariff_analyzer.sharedui.generated.resources.debug_mode_description
 import tariff_analyzer.sharedui.generated.resources.debug_mode_title
 import tariff_analyzer.sharedui.generated.resources.debug_section_description
@@ -29,7 +35,10 @@ fun SettingsScreenContent(
     onAction: (SettingsContract.Action) -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         AnalyzerSectionHeader(
@@ -58,10 +67,22 @@ fun SettingsScreenContent(
             },
         )
         AnalyzerSectionHeader(
+            title = stringResource(Res.string.dashboard_section_title),
+            description = stringResource(Res.string.dashboard_section_description),
+        )
+        ToggleSettingItem(
+            title = stringResource(Res.string.dashboard_mode_title),
+            description = stringResource(Res.string.dashboard_mode_description),
+            enabled = state.isDashboardEnabled,
+            onEnabledChange = {
+                onAction(SettingsContract.Action.SetDashboardEnabled(it))
+            },
+        )
+        AnalyzerSectionHeader(
             title = stringResource(Res.string.debug_section_title),
             description = stringResource(Res.string.debug_section_description),
         )
-        DebugModeItem(
+        ToggleSettingItem(
             title = stringResource(Res.string.debug_mode_title),
             description = stringResource(Res.string.debug_mode_description),
             enabled = state.isDebugModeEnabled,

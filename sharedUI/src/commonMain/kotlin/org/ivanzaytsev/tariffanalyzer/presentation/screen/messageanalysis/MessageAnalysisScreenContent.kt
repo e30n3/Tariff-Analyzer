@@ -16,7 +16,11 @@ fun MessageAnalysisScreenContent(
     snackbarHostState: SnackbarHostState,
     onAction: (Action) -> Unit,
 ) {
-    if (state.processingStatus is ProcessingStatus.Completed && state.summary != null) {
+    if (
+        state.processingStatus is ProcessingStatus.Completed &&
+        state.summary != null &&
+        state.isDashboardEnabled
+    ) {
         AnalysisDashboardContent(
             state = state,
             snackbarHostState = snackbarHostState,

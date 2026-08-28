@@ -3,6 +3,7 @@ package org.ivanzaytsev.tariffanalyzer.presentation.messageanalysis
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -16,6 +17,7 @@ import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.Messag
 import org.ivanzaytsev.tariffanalyzer.presentation.screen.messageanalysis.MessageAnalysisScreenContent
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
 class AnalysisDashboardContentTest {
@@ -41,6 +43,24 @@ class AnalysisDashboardContentTest {
         onNodeWithText("Новый анализ").performClick()
 
         assertEquals(MessageAnalysisContract.Action.StartNewAnalysis, receivedAction)
+    }
+
+    @Test
+    fun completedStateShowsRegularResultWhenDashboardIsDisabled() = runComposeUiTest {
+        setContent {
+            val snackbarHostState = remember { SnackbarHostState() }
+            TariffAnalyzerTheme(isDark = false) {
+                MessageAnalysisScreenContent(
+                    state = completedState().copy(isDashboardEnabled = false),
+                    snackbarHostState = snackbarHostState,
+                    onAction = {},
+                )
+            }
+        }
+
+        assertTrue(onAllNodesWithText("Расчёт оператора").fetchSemanticsNodes().isEmpty())
+        onNodeWithText("Результат").fetchSemanticsNode()
+        onNodeWithText("/tmp/messages_analyzed.csv").fetchSemanticsNode()
     }
 
     private fun completedState(): MessageAnalysisContract.State = MessageAnalysisContract.State(

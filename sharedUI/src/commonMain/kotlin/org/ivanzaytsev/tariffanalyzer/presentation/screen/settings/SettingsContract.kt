@@ -6,11 +6,13 @@ interface SettingsContract {
 
     data class State(
         val selectedThemeMode: ThemeMode = ThemeMode.System,
+        val isDashboardEnabled: Boolean = true,
         val isDebugModeEnabled: Boolean = false,
     )
 
     sealed interface Action {
         data class SelectThemeMode(val mode: ThemeMode) : Action
+        data class SetDashboardEnabled(val enabled: Boolean) : Action
         data class SetDebugMode(val enabled: Boolean) : Action
     }
 

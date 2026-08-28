@@ -22,13 +22,18 @@ class MessageAnalysisViewModel(
     private val processMessagesUseCase: ProcessMessagesUseCase,
     private val settingsRepository: SettingsRepository,
 ) : BaseViewModel<State, Action, Effect>(
-    initialState = State(),
+    initialState = State(isDashboardEnabled = settingsRepository.dashboardEnabled.value),
     loggerTag = "MessageAnalysisViewModel",
 ) {
 
     private var processingJob: Job? = null
 
     init {
+        viewModelScope.launch {
+            settingsRepository.dashboardEnabled.collect { enabled ->
+                setState { it.copy(isDashboardEnabled = enabled) }
+            }
+        }
         onAction(Action.LoadConfigStatus)
     }
 

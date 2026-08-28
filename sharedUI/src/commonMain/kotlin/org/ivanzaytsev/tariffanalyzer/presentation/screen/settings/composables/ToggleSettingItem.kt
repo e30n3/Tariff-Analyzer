@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun DebugModeItem(
+fun ToggleSettingItem(
     title: String,
     description: String,
     enabled: Boolean,

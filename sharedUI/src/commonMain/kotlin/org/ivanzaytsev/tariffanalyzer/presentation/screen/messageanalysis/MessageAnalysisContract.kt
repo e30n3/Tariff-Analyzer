@@ -20,6 +20,7 @@ interface MessageAnalysisContract {
         val outputCsvPath: String? = null,
         val logPath: String? = null,
         val summary: AnalysisSummary? = null,
+        val isDashboardEnabled: Boolean = true,
         val error: String? = null,
     ) {
         val canStartProcessing: Boolean

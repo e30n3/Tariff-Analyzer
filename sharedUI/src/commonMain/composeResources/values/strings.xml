@@ -21,6 +21,10 @@
     <string name="theme_system">Системная</string>
     <string name="theme_dark">Темная</string>
     <string name="theme_light">Светлая</string>
+    <string name="dashboard_section_title">Dashboard</string>
+    <string name="dashboard_section_description">Настройте отображение итоговой сводки после обработки файла.</string>
+    <string name="dashboard_mode_title">Показывать dashboard</string>
+    <string name="dashboard_mode_description">После завершения анализа показывать финансовую сводку, качество классификации и диагностику.</string>
     <string name="debug_section_title">Диагностика</string>
     <string name="debug_section_description">Отладочные данные сохраняются локально. Отображение консоли изменится при следующем запуске приложения.</string>
     <string name="debug_mode_title">Режим отладки</string>

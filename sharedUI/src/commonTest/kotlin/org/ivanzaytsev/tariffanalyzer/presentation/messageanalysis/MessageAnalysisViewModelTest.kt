@@ -107,14 +107,29 @@ class MessageAnalysisViewModelTest {
         assertEquals(null, viewModel.state.value.logPath)
     }
 
+    @Test
+    fun dashboardSettingIsReflectedInState() = runTest(dispatcher) {
+        val repository = InMemoryAnalyzerConfigRepository()
+        val settingsRepository = FakeSettingsRepository(dashboardEnabled = false)
+        val viewModel = createViewModel(repository, settingsRepository = settingsRepository)
+
+        assertEquals(false, viewModel.state.value.isDashboardEnabled)
+
+        settingsRepository.setDashboardEnabled(true)
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.state.value.isDashboardEnabled)
+    }
+
     private fun createViewModel(
         repository: InMemoryAnalyzerConfigRepository,
         debugMode: Boolean = false,
+        settingsRepository: SettingsRepository = FakeSettingsRepository(debugMode = debugMode),
     ): MessageAnalysisViewModel =
         MessageAnalysisViewModel(
             loadConfigStatusUseCase = LoadConfigStatusUseCase(repository),
             processMessagesUseCase = ProcessMessagesUseCase(repository, FakeMessageAnalysisFileProcessor()),
-            settingsRepository = FakeSettingsRepository(debugMode),
+            settingsRepository = settingsRepository,
         )
 
     private suspend fun generateConfig(repository: InMemoryAnalyzerConfigRepository) {
@@ -161,12 +176,27 @@ class MessageAnalysisViewModelTest {
         }
     }
 
-    private class FakeSettingsRepository(debugMode: Boolean) : SettingsRepository {
-        override val themeMode: StateFlow<ThemeMode> = MutableStateFlow(ThemeMode.System)
-        override val debugMode: StateFlow<Boolean> = MutableStateFlow(debugMode)
+    private class FakeSettingsRepository(
+        debugMode: Boolean = false,
+        dashboardEnabled: Boolean = true,
+    ) : SettingsRepository {
+        private val mutableThemeMode = MutableStateFlow(ThemeMode.System)
+        private val mutableDebugMode = MutableStateFlow(debugMode)
+        private val mutableDashboardEnabled = MutableStateFlow(dashboardEnabled)
+        override val themeMode: StateFlow<ThemeMode> = mutableThemeMode
+        override val debugMode: StateFlow<Boolean> = mutableDebugMode
+        override val dashboardEnabled: StateFlow<Boolean> = mutableDashboardEnabled
 
-        override fun setThemeMode(mode: ThemeMode) = Unit
+        override fun setThemeMode(mode: ThemeMode) {
+            mutableThemeMode.value = mode
+        }
 
-        override fun setDebugMode(enabled: Boolean) = Unit
+        override fun setDebugMode(enabled: Boolean) {
+            mutableDebugMode.value = enabled
+        }
+
+        override fun setDashboardEnabled(enabled: Boolean) {
+            mutableDashboardEnabled.value = enabled
+        }
     }
 }

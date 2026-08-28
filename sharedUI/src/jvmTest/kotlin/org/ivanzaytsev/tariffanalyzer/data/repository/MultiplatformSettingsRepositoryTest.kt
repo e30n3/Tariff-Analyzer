@@ -29,6 +29,28 @@ class MultiplatformSettingsRepositoryTest {
         assertTrue(MultiplatformSettingsRepository(settings).debugMode.value)
     }
 
+    @Test
+    fun dashboardIsEnabledByDefault() = withTestSettings { settings ->
+        val repository = MultiplatformSettingsRepository(settings)
+
+        assertTrue(repository.dashboardEnabled.value)
+    }
+
+    @Test
+    fun dashboardSettingIsPublishedAndPersisted() = withTestSettings { settings ->
+        val repository = MultiplatformSettingsRepository(settings)
+
+        repository.setDashboardEnabled(false)
+
+        assertFalse(repository.dashboardEnabled.value)
+        assertFalse(MultiplatformSettingsRepository(settings).dashboardEnabled.value)
+
+        repository.setDashboardEnabled(true)
+
+        assertTrue(repository.dashboardEnabled.value)
+        assertTrue(MultiplatformSettingsRepository(settings).dashboardEnabled.value)
+    }
+
     private fun withTestSettings(block: (PreferencesSettings) -> Unit) {
         val preferences = Preferences.userRoot().node("tariff-analyzer-tests/${UUID.randomUUID()}")
         try {

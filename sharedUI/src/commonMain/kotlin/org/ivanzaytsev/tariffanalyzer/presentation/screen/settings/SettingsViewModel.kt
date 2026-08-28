@@ -13,6 +13,7 @@ class SettingsViewModel(
 ) : BaseViewModel<State, Action, Effect>(
     initialState = State(
         selectedThemeMode = settingsRepository.themeMode.value,
+        isDashboardEnabled = settingsRepository.dashboardEnabled.value,
         isDebugModeEnabled = settingsRepository.debugMode.value,
     ),
     loggerTag = "SettingsViewModel",
@@ -25,6 +26,11 @@ class SettingsViewModel(
             }
         }
         viewModelScope.launch {
+            settingsRepository.dashboardEnabled.collect { enabled ->
+                setState { it.copy(isDashboardEnabled = enabled) }
+            }
+        }
+        viewModelScope.launch {
             settingsRepository.debugMode.collect { enabled ->
                 setState { it.copy(isDebugModeEnabled = enabled) }
             }
@@ -34,6 +40,7 @@ class SettingsViewModel(
     override fun reduce(action: Action) {
         when (action) {
             is Action.SelectThemeMode -> settingsRepository.setThemeMode(action.mode)
+            is Action.SetDashboardEnabled -> settingsRepository.setDashboardEnabled(action.enabled)
             is Action.SetDebugMode -> settingsRepository.setDebugMode(action.enabled)
         }
     }
